@@ -1,16 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { WizardConnectQRDialog, useWizardConnect } from "@wizardconnect/react";
 import { explorerTx, type BchNetwork } from "./lib/network";
-import { deriveAddresses, getCoins, sendBch, type WalletCoin } from "./lib/wallet";
+import { deriveAddresses, formatBch, getCoins, sendBch, type WalletCoin } from "./lib/wallet";
 import "./App.css";
 
 const NETWORK_KEY = "handlepay-network";
-
-function formatBch(sats: bigint) {
-  const whole = sats / 100_000_000n;
-  const frac = (sats % 100_000_000n).toString().padStart(8, "0");
-  return `${whole}.${frac}`;
-}
 
 export default function App() {
   const [network, setNetwork] = useState<BchNetwork>(() => {
