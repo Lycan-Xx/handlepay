@@ -36,3 +36,22 @@ export function getProvider(network: BchNetwork): ElectrumNetworkProvider {
   }
   return provider;
 }
+
+export interface ChainTx {
+  hex: string;
+  /** 0 while in the mempool. */
+  confirmations: number;
+}
+
+/**
+ * Raw transaction plus confirmation count, from Fulcrum's verbose
+ * `blockchain.transaction.get`. Callers re-hash `hex` against the txid; the
+ * server is only trusted for availability and confirmation depth.
+ */
+export async function getTransaction(network: BchNetwork, txid: string): Promise<ChainTx> {
+  const result = (await getProvider(network).performRequest("blockchain.transaction.get", txid, true)) as unknown;
+  if (typeof result === "string") return { hex: result, confirmations: 0 };
+  const r = result as { hex?: unknown; confirmations?: unknown };
+  if (typeof r?.hex !== "string") throw new Error(`Transaction ${txid} not found.`);
+  return { hex: r.hex, confirmations: typeof r.confirmations === "number" ? r.confirmations : 0 };
+}
