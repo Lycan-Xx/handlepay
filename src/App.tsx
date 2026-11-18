@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { WizardConnectQRDialog, useWizardConnect } from "@wizardconnect/react";
 import { explorerTx, type BchNetwork } from "./lib/network";
 import { deriveAddresses, formatBch, getCoins, sendBch, type WalletCoin } from "./lib/wallet";
+import { IdentityDev } from "./components/IdentityDev";
 import "./App.css";
 
 const NETWORK_KEY = "handlepay-network";
@@ -176,6 +177,16 @@ export default function App() {
             </p>
           )}
         </section>
+      )}
+
+      {connected && receiveAddress && (
+        <IdentityDev
+          manager={wc.manager!}
+          network={network}
+          coins={coins}
+          bindAddress={receiveAddress}
+          onSent={refresh}
+        />
       )}
 
       {error && <p className="err">{error}</p>}
