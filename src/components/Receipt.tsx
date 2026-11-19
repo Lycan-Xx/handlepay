@@ -72,6 +72,18 @@ export function Receipt({ receipt, network }: { receipt: ReceiptData; network: B
         ))}
       </ol>
       <p className="muted">{STEPS[currentIndex].hint}</p>
+      {receipt.broadcast?.status === "replaced" && (
+        <p className="muted">
+          Your wallet sent its own version of this payment. This receipt shows the one that is on the network.
+        </p>
+      )}
+      {receipt.broadcast?.status === "unverified" && stage === "submitted" && (
+        <p className="warn">
+          Your wallet approved this, but HandlePay can't see it on the network yet
+          {receipt.broadcast.detail ? ` (the server said: ${receipt.broadcast.detail.split("\n").pop()})` : ""}. Check
+          your wallet's history; this receipt updates if it appears.
+        </p>
+      )}
 
       <dl className="facts">
         <dt>To</dt>

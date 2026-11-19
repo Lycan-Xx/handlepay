@@ -79,6 +79,8 @@ export interface Receipt {
   /** Milliseconds since the epoch. */
   at: number;
   explorerUrl: string;
+  /** How the transaction reached the network (from ensureBroadcast). */
+  broadcast?: { status: "seen" | "sent" | "replaced" | "unverified"; detail?: string };
 }
 
 /** Plain-text receipt for the Copy button. */

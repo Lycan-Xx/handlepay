@@ -7,6 +7,7 @@ import {
   type NetworkProvider,
   type SpendableUtxo,
 } from "cashscript";
+import { ensureBroadcast, type BroadcastResult } from "./broadcast";
 import { PREFIX, getProvider, type BchNetwork } from "./network";
 
 /** WizardConnect path names and the BIP44 child index each maps to. */
@@ -164,8 +165,11 @@ export function buildSignRequest(spec: PaymentSpec): SignRequest {
 }
 
 export interface SendResult {
+  /** The transaction actually on the network (see BroadcastResult). */
   txid: string;
+  /** The hex the wallet handed back. */
   signedTransaction: string;
+  broadcast: BroadcastResult;
 }
 
 /**
@@ -205,36 +209,15 @@ export async function sendBch(opts: {
   );
   if (response.error) throw new Error(response.error);
 
-  const txid = txidOf(response.signedTransaction);
-  await ensureBroadcast(opts.network, txid, response.signedTransaction);
-  return { txid, signedTransaction: response.signedTransaction };
-}
-
-/**
- * The request asks the wallet to broadcast, but the wallet may send it to a
- * different network: pairing and signing carry no network, so a mainnet-only
- * wallet (Selene, in testing) signs chipnet transactions correctly and then
- * broadcasts them to mainnet, where they fail. Give the network a moment to
- * show the transaction; if it still isn't known, broadcast the signed hex ourselves.
- * Re-sending an already-known transaction is harmless.
- */
-async function ensureBroadcast(network: BchNetwork, txid: string, hex: string): Promise<void> {
-  const provider = getProvider(network);
-  for (let i = 0; i < 3; i++) {
-    await new Promise((r) => setTimeout(r, 1500));
-    try {
-      await provider.getRawTransaction(txid);
-      return;
-    } catch {
-      /* not visible yet */
-    }
-  }
-  try {
-    await provider.sendRawTransaction(hex);
-  } catch (e) {
-    // An "already known" error means the wallet's broadcast landed after all.
-    if (!/already|known|duplicate|txn-already/i.test((e as Error).message)) throw e;
-  }
+  const signedTxid = txidOf(response.signedTransaction);
+  const broadcast = await ensureBroadcast({
+    provider: getProvider(opts.network),
+    txid: signedTxid,
+    hex: response.signedTransaction,
+    inputAddresses: picked.map((c) => c.owner.address),
+    changeAddress: opts.changeAddress,
+  });
+  return { txid: broadcast.txid, signedTransaction: response.signedTransaction, broadcast };
 }
 
 /** Transaction id of a raw transaction (double SHA-256, byte-reversed hex). */

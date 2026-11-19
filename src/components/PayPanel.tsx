@@ -95,7 +95,7 @@ export function PayPanel(props: {
     setError(null);
     const cleanedMemo = cleanMemo(memo);
     try {
-      const { txid } = await sendBch({
+      const { txid, broadcast } = await sendBch({
         manager: wc.manager,
         network,
         coins,
@@ -115,6 +115,7 @@ export function PayPanel(props: {
         network,
         at: Date.now(),
         explorerUrl: explorerTx(network, txid),
+        broadcast: { status: broadcast.status, detail: broadcast.detail },
       });
       setTimeout(wallet.refresh, 3_000);
     } catch (e) {
