@@ -67,6 +67,16 @@ export interface ChainTx {
  * `blockchain.transaction.get`. Callers re-hash `hex` against the txid; the
  * server is only trusted for availability and confirmation depth.
  */
+/**
+ * True when the server answered that the transaction doesn't exist, as
+ * opposed to not answering at all (timeout, connection dropped). Only the
+ * first may be shown as "not found"; the second means "couldn't check".
+ */
+export function isTxNotFound(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e);
+  return /no such mempool|not found|unknown transaction/i.test(message);
+}
+
 export async function getTransaction(network: BchNetwork, txid: string): Promise<ChainTx> {
   const result = (await getProvider(network).performRequest("blockchain.transaction.get", txid, true)) as unknown;
   if (typeof result === "string") return { hex: result, confirmations: 0 };

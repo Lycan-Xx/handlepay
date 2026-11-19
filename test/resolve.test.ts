@@ -142,6 +142,26 @@ describe("resolveHandle", () => {
     expect(r.reason).toBe("Proof transaction not found");
   });
 
+  it("fails the check, not the name, when the BCH server doesn't answer", async () => {
+    const w = world();
+    seedSani(w);
+    w.deps.getTransaction = async () => {
+      throw new Error("Request timed out");
+    };
+    await expect(resolveHandle(HANDLE, "chipnet", w.deps)).rejects.toThrow(/Couldn't reach the chipnet BCH server/);
+  });
+
+  it("fails the check when only a coin the proof spent can't be fetched", async () => {
+    const w = world();
+    const { proofTxid } = seedSani(w);
+    const real = w.deps.getTransaction;
+    w.deps.getTransaction = async (txid) => {
+      if (txid === proofTxid) return real(txid);
+      throw new Error("socket closed");
+    };
+    await expect(resolveHandle(HANDLE, "chipnet", w.deps)).rejects.toThrow(/Couldn't reach/);
+  });
+
   it("security demo: Mallory claims Sani's address and replays Sani's proof → Claimed", async () => {
     const w = world();
     const sani = seedSani(w);

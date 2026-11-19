@@ -16,7 +16,7 @@ import {
   parsePaytoEvent,
   type Check,
 } from "./binding";
-import { getTransaction, type BchNetwork, type ChainTx } from "./network";
+import { getTransaction, isTxNotFound, type BchNetwork, type ChainTx } from "./network";
 import {
   dedupeVerified,
   fetchNip05,
@@ -178,10 +178,17 @@ async function gatherProofChecks(
   network: BchNetwork,
   deps: ResolveDeps,
 ): Promise<Check[]> {
+  // A server that doesn't answer is not evidence against the name: fail the
+  // whole check ("Couldn't check this name · Try again") instead of showing
+  // Claimed. Only a server that says the transaction doesn't exist counts.
+  const unreachable = () =>
+    new Error(`Couldn't reach the ${network} BCH server to check the proof. Check your connection and try again.`);
+
   let proof: ChainTx;
   try {
     proof = await deps.getTransaction(parsed.proofTxid);
-  } catch {
+  } catch (e) {
+    if (!isTxNotFound(e)) throw unreachable();
     return [
       { id: "spends", ok: false, label: "Proof was paid from this address", detail: "Proof transaction not found" },
       { id: "commits", ok: false, label: "Proof names this Nostr key", detail: "Proof transaction not found" },
@@ -205,13 +212,15 @@ async function gatherProofChecks(
         ids.map(async (id) => {
           try {
             parents.set(id, (await deps.getTransaction(id)).hex);
-          } catch {
+          } catch (e) {
+            if (!isTxNotFound(e)) throw unreachable();
             /* missing parent → the spends check fails with a reason */
           }
         }),
       );
     }
-  } catch {
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("Couldn't reach")) throw e;
     /* undecodable → checkProof reports it */
   }
 
