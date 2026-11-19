@@ -7,6 +7,11 @@ describe("matchRoute", () => {
     expect(matchRoute("")).toEqual({ name: "home" });
   });
 
+  it("matches the security page", () => {
+    expect(matchRoute("/security")).toEqual({ name: "security" });
+    expect(matchRoute("/security/extra").name).toBe("not_found");
+  });
+
   it("reads the handle from a pay link, decoded", () => {
     expect(matchRoute("/pay/sani@lycanforge.com.ng")).toEqual({ name: "pay", handle: "sani@lycanforge.com.ng" });
     expect(matchRoute("/pay/sani%40lycanforge.com.ng/")).toEqual({ name: "pay", handle: "sani@lycanforge.com.ng" });

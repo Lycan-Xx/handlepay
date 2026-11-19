@@ -4,6 +4,7 @@ import { useWallet } from "./hooks/useWallet";
 import { navigate, useRoute } from "./lib/router";
 import { DevHome } from "./routes/DevHome";
 import { PayPage } from "./routes/PayPage";
+import { SecurityPage } from "./routes/SecurityPage";
 import { TxPage } from "./routes/TxPage";
 import "./App.css";
 
@@ -15,6 +16,10 @@ export default function App() {
   const goHome = (e: React.MouseEvent) => {
     e.preventDefault();
     navigate("/");
+  };
+  const link = (href: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(href);
   };
 
   return (
@@ -33,6 +38,11 @@ export default function App() {
           ))}
         </div>
       </header>
+      <nav className="nav" aria-label="Pages">
+        <a href="/security" onClick={link("/security")} aria-current={route.name === "security" ? "page" : undefined}>
+          Try the attack
+        </a>
+      </nav>
 
       {network === "mainnet" && <p className="warn">Mainnet uses real money. Keep amounts tiny.</p>}
 
@@ -43,6 +53,7 @@ export default function App() {
       {route.name === "tx" && (
         <TxPage key={`${route.txid}|${search.get("network") ?? network}`} txid={route.txid} search={search} network={network} />
       )}
+      {route.name === "security" && <SecurityPage key={network} network={network} search={search} />}
       {route.name === "not_found" && (
         <section className="card">
           <h2>Page not found</h2>
