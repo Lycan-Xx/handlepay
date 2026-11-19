@@ -3,6 +3,7 @@ import { useNetwork } from "./hooks/useNetwork";
 import { useWallet } from "./hooks/useWallet";
 import { navigate, useRoute } from "./lib/router";
 import { DevHome } from "./routes/DevHome";
+import { AuthPage } from "./routes/AuthPage";
 import { PayPage } from "./routes/PayPage";
 import { SecurityPage } from "./routes/SecurityPage";
 import { TxPage } from "./routes/TxPage";
@@ -42,6 +43,9 @@ export default function App() {
         <a href="/security" onClick={link("/security")} aria-current={route.name === "security" ? "page" : undefined}>
           Try the attack
         </a>
+        <a href="/auth" onClick={link("/auth")} aria-current={route.name === "auth" ? "page" : undefined}>
+          Sign in with a name
+        </a>
       </nav>
 
       {network === "mainnet" && <p className="warn">Mainnet uses real money. Keep amounts tiny.</p>}
@@ -54,6 +58,7 @@ export default function App() {
         <TxPage key={`${route.txid}|${search.get("network") ?? network}`} txid={route.txid} search={search} network={network} />
       )}
       {route.name === "security" && <SecurityPage key={network} network={network} search={search} />}
+      {route.name === "auth" && <AuthPage key={network} network={network} search={search} />}
       {route.name === "not_found" && (
         <section className="card">
           <h2>Page not found</h2>

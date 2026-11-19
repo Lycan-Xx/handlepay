@@ -11,12 +11,14 @@ export type Route =
   | { name: "pay"; handle: string }
   | { name: "tx"; txid: string }
   | { name: "security" }
+  | { name: "auth" }
   | { name: "not_found"; path: string };
 
 export function matchRoute(pathname: string): Route {
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/") return { name: "home" };
   if (path === "/security") return { name: "security" };
+  if (path === "/auth") return { name: "auth" };
   const tx = /^\/tx\/([0-9a-fA-F]{64})$/.exec(path);
   if (tx) return { name: "tx", txid: tx[1].toLowerCase() };
   const pay = /^\/pay\/([^/]+)$/.exec(path);

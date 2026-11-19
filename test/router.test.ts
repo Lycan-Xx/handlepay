@@ -7,8 +7,9 @@ describe("matchRoute", () => {
     expect(matchRoute("")).toEqual({ name: "home" });
   });
 
-  it("matches the security page", () => {
+  it("matches the security and sign-in pages", () => {
     expect(matchRoute("/security")).toEqual({ name: "security" });
+    expect(matchRoute("/auth/")).toEqual({ name: "auth" });
     expect(matchRoute("/security/extra").name).toBe("not_found");
   });
 
