@@ -211,9 +211,11 @@ export async function sendBch(opts: {
 }
 
 /**
- * The request asks the wallet to broadcast, but not every wallet does (Selene
- * signed without broadcasting in testing). Give the network a moment to show
- * the transaction; if it still isn't known, broadcast the signed hex ourselves.
+ * The request asks the wallet to broadcast, but the wallet may send it to a
+ * different network: pairing and signing carry no network, so a mainnet-only
+ * wallet (Selene, in testing) signs chipnet transactions correctly and then
+ * broadcasts them to mainnet, where they fail. Give the network a moment to
+ * show the transaction; if it still isn't known, broadcast the signed hex ourselves.
  * Re-sending an already-known transaction is harmless.
  */
 async function ensureBroadcast(network: BchNetwork, txid: string, hex: string): Promise<void> {

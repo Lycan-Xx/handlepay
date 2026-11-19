@@ -6,7 +6,7 @@ Unit tests (`npm test`, 82 passing) cover the logic in isolation. They could not
 
 - **Date:** 18 Nov 2026
 - **Network:** chipnet (test coins only, no real money)
-- **Wallet:** Selene (WizardConnect)
+- **Wallet:** Selene (WizardConnect). Selene turned out to be on mainnet throughout; see issue 4.
 - **Nostr signer:** nos2x, with a throwaway key
 - **Result:** passed. `lycan@lycanforge.com.ng` resolves to **Verified** with all six checks ticked.
 
@@ -46,12 +46,14 @@ Two separate problems were mixed together here, which made it confusing.
 1. **The explorer itself.** The app linked to `chipnet.chaingraph.cash`, which sits behind a bot check ("Just a moment…") that can block the page. We switched to `chipnet.imaginary.cash`, the explorer the faucet already uses for chipnet (commit `05b6c8e`).
 2. **The transaction did not exist.** The new explorer answered "No such mempool or blockchain transaction". To rule out the explorer, we asked the chipnet Fulcrum server directly for the txid. It had never seen it.
 
-### Issue 4: Selene signs but does not broadcast
-- **Diagnosis:** every request sets `broadcast: true`, so the app assumed the wallet would send the transaction and returned the txid it computed from the signed hex. Selene signed correctly but never sent it. The txid was right; the transaction simply was never on the network.
+### Issue 4: the signed transaction never reached chipnet
+- **Diagnosis at the time:** every request sets `broadcast: true`, so the app assumed the wallet would send the transaction and returned the txid it computed from the signed hex. Selene signed correctly, but the transaction never reached chipnet. The txid was right; the transaction simply was not on the network. We concluded that Selene does not broadcast.
 - **Fix:** after signing, `sendBch` polls the server a few times for the txid. If it is still unknown, the app submits the signed hex itself. An "already known" reply counts as success, because that means the wallet's own broadcast landed in the meantime.
 - **Commit:** `d9c05a0`
 - **Retest:** the same txid (`f917f1db…`) appeared in the mempool: 219 bytes, 219 sat fee, inputs from one address, change to Selene's change address.
-- **What this does and does not prove:** Selene accepted and signed the hand-built request, and the network accepted the signature. That is the riskiest piece of Day 1 and it works. It does **not** show that Selene broadcasts, so the wallet table records it as "signs, does not broadcast".
+- **What this does and does not prove:** Selene accepted and signed the hand-built request, and the network accepted the signature. That is the riskiest piece of Day 1 and it works.
+- **Correction (19 Nov):** the conclusion "Selene does not broadcast" was wrong. Selene never showed a balance, and its network settings list only mainnet servers (cashnode.bch.ninja, bch.imaginary.cash, electroncash.dk and others); it has no chipnet option that we could find. So Selene was on **mainnet** for the whole test. It most likely did broadcast, but to mainnet, where the coins it spent don't exist, so the transaction was rejected. It could still sign correctly, because neither pairing nor signing carries the network: the app turns the shared keys into `bchtest:` addresses only because the page is on chipnet.
+- **Why the fallback stays:** it protects against exactly this kind of wallet/page network mismatch, and re-sending a transaction the network already has is harmless.
 
 ### Issue 5: no Nostr signer
 - **Symptom:** card 4 said "No signer found".
@@ -92,12 +94,13 @@ With everything in place:
 
 ## Findings worth keeping
 
-1. **Do not trust a wallet to broadcast.** Verify that the network knows the txid before showing it, and broadcast the signed hex yourself if it does not.
-2. **Check the network first.** Most "nothing arrived" problems were wallet, faucet or explorer on different networks.
-3. **Verify against the chain, not the explorer.** When an explorer fails, query the Fulcrum server directly. It separates "the page is down" from "the transaction does not exist".
-4. **Derived state must follow the data it depends on.** The address list depended on keys that arrive after the connection is already marked connected.
-5. **The hand-built WizardConnect signing request works** with a real wallet, including the restricted-coin spend used for the proof transaction.
-6. **NIP-05 hosting is stricter than it looks:** no redirects, JSON content type, CORS open. A site that rewrites every path needs an exemption.
+1. **Do not trust a wallet to broadcast to the right network.** Verify that the network knows the txid before showing it, and broadcast the signed hex yourself if it does not.
+2. **A wallet can sign for a network it isn't on.** Pairing and signing carry no network, so a mainnet-only wallet like Selene passes every chipnet check except broadcasting and showing a balance. Test chipnet with Cashonize or Paytaca; test Selene on mainnet.
+3. **Check the network first.** Most "nothing arrived" problems were wallet, faucet or explorer on different networks.
+4. **Verify against the chain, not the explorer.** When an explorer fails, query the Fulcrum server directly. It separates "the page is down" from "the transaction does not exist".
+5. **Derived state must follow the data it depends on.** The address list depended on keys that arrive after the connection is already marked connected.
+6. **The hand-built WizardConnect signing request works** with a real wallet, including the restricted-coin spend used for the proof transaction.
+7. **NIP-05 hosting is stricter than it looks:** no redirects, JSON content type, CORS open. A site that rewrites every path needs an exemption.
 
 ## Commits from this test
 
@@ -112,4 +115,4 @@ With everything in place:
 - Mainnet; this ran on chipnet only.
 - The pay-by-name flow and the Changed warning, which need the `/pay` page.
 - Attacks such as one person reusing another's proof. The unit tests cover these; the `/security` page will show them live.
-- Other wallets. Selene is the first column filled in; Cashonize and Paytaca remain.
+- Other wallets. Selene's column: Pair ✓, Plain send ✓ (signs; mainnet-only, so its own broadcast can't reach chipnet), Proof transaction ✓. Cashonize and Paytaca remain, and Selene should be rechecked on mainnet.
