@@ -1,0 +1,59 @@
+/**
+ * A tiny path router. The app has a handful of routes, so a dependency isn't
+ * worth it: match the pathname, and use the History API to move between pages.
+ * Hosting serves index.html for unknown paths, so deep links like
+ * /pay/sani@lycanforge.com.ng load the app directly.
+ */
+import { useEffect, useState } from "react";
+
+export type Route = { name: "home" } | { name: "pay"; handle: string } | { name: "not_found"; path: string };
+
+export function matchRoute(pathname: string): Route {
+  const path = pathname.replace(/\/+$/, "") || "/";
+  if (path === "/") return { name: "home" };
+  const pay = /^\/pay\/([^/]+)$/.exec(path);
+  if (pay) {
+    let handle: string;
+    try {
+      handle = decodeURIComponent(pay[1]);
+    } catch {
+      return { name: "not_found", path };
+    }
+    return { name: "pay", handle };
+  }
+  return { name: "not_found", path };
+}
+
+const NAV_EVENT = "handlepay:navigate";
+
+/** Go to `href` (path + query) without reloading the page. */
+export function navigate(href: string): void {
+  window.history.pushState(null, "", href);
+  window.dispatchEvent(new Event(NAV_EVENT));
+  window.scrollTo(0, 0);
+}
+
+/** The current route, kept in sync with back/forward and navigate(). */
+export function useRoute(): { route: Route; search: URLSearchParams } {
+  const read = () => ({ route: matchRoute(window.location.pathname), search: new URLSearchParams(window.location.search) });
+  const [state, setState] = useState(read);
+  useEffect(() => {
+    const update = () => setState(read());
+    window.addEventListener("popstate", update);
+    window.addEventListener(NAV_EVENT, update);
+    return () => {
+      window.removeEventListener("popstate", update);
+      window.removeEventListener(NAV_EVENT, update);
+    };
+  }, []);
+  return state;
+}
+
+/** Path for a pay link. The handle keeps its "@" so the link stays readable. */
+export function payPath(handle: string, params?: { amount?: string; memo?: string }): string {
+  const query = new URLSearchParams();
+  if (params?.amount) query.set("amount", params.amount);
+  if (params?.memo) query.set("memo", params.memo);
+  const q = query.toString();
+  return `/pay/${encodeURIComponent(handle).replace(/%40/g, "@")}${q ? `?${q}` : ""}`;
+}
