@@ -37,7 +37,7 @@ export default function App() {
 
       {route.name === "home" && <DevHome wallet={wallet} network={network} />}
       {route.name === "pay" && (
-        <PayPage key={route.handle} handle={route.handle} search={search} wallet={wallet} network={network} />
+        <PayPage key={`${route.handle}|${network}`} handle={route.handle} search={search} wallet={wallet} network={network} />
       )}
       {route.name === "not_found" && (
         <section className="card">

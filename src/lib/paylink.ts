@@ -36,6 +36,16 @@ export function parsePayParams(search: URLSearchParams): PayParams {
   };
 }
 
+/** Parse a BCH amount like "0.0005" into satoshis. Null unless it's positive with ≤ 8 decimals. */
+export function parseBchAmount(input: string | null | undefined): bigint | null {
+  if (!input) return null;
+  const s = input.trim();
+  const m = /^(\d+)(?:\.(\d{1,8}))?$/.exec(s);
+  if (!m) return null;
+  const sats = BigInt(m[1]) * 100_000_000n + BigInt((m[2] ?? "").padEnd(8, "0"));
+  return sats > 0n ? sats : null;
+}
+
 /** Collapse whitespace, drop control characters, cap the length. */
 export function cleanMemo(memo: string | null | undefined): string | undefined {
   if (!memo) return undefined;

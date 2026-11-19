@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MEMO_MAX,
   cleanMemo,
+  parseBchAmount,
   parsePayParams,
   paymentErrorMessage,
   paymentStage,
@@ -30,6 +31,20 @@ describe("parsePayParams", () => {
 
   it("has no amount when the link sets none", () => {
     expect(params("")).toEqual({ amountUsd: null, ignored: [] });
+  });
+});
+
+describe("parseBchAmount", () => {
+  it("converts BCH decimals to whole satoshis without float rounding", () => {
+    expect(parseBchAmount("0.00052")).toBe(52_000n);
+    expect(parseBchAmount("1")).toBe(100_000_000n);
+    expect(parseBchAmount(" 0.12345678 ")).toBe(12_345_678n);
+  });
+
+  it("rejects zero, negatives, too many decimals and junk", () => {
+    for (const bad of ["", "0", "0.0", "-1", "0.123456789", "1e-3", "abc", ".5", null]) {
+      expect(parseBchAmount(bad)).toBeNull();
+    }
   });
 });
 

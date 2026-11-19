@@ -8,6 +8,7 @@
  * always the one the resolver returned, never anything from the URL.
  */
 import { useEffect, useMemo, useState } from "react";
+import { PayPanel } from "../components/PayPanel";
 import { VerifyCard } from "../components/VerifyCard";
 import type { Wallet } from "../hooks/useWallet";
 import type { BchNetwork } from "../lib/network";
@@ -26,10 +27,8 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
   const [accepted, setAccepted] = useState(false);
 
   useEffect(() => {
+    // App remounts this page per handle and network, so state starts fresh here.
     let cancelled = false;
-    setResolution(null);
-    setError(null);
-    setAccepted(false);
     const parsed = parseHandle(handle);
     const pin = parsed ? getPin(network, parsed.full) : null;
     resolveHandle(handle, network, liveDeps(network), pin)
@@ -61,7 +60,10 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
         network={network}
         resolution={resolution}
         error={error}
-        onRetry={() => setAttempt((n) => n + 1)}
+        onRetry={() => {
+          setError(null);
+          setAttempt((n) => n + 1);
+        }}
       />
 
       {params.ignored.length > 0 && (
@@ -96,9 +98,13 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
       )}
 
       {canPay && resolution?.address && (
-        <section className="card">
-          <p className="muted">Payment comes next.</p>
-        </section>
+        <PayPanel
+          wallet={props.wallet}
+          network={network}
+          handle={resolution.handle?.full ?? handle}
+          address={resolution.address}
+          params={params}
+        />
       )}
     </>
   );

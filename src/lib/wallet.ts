@@ -187,6 +187,12 @@ export async function sendBch(opts: {
   opReturn?: string[];
   /** Spend only coins from this address (proof transactions). */
   onlyFrom?: string;
+  /**
+   * Aborting rejects the pending request and sends sign_cancel to the wallet.
+   * The wallet may already have signed it, so callers say "cancelled" only
+   * for what they know: that this page will not use the result.
+   */
+  signal?: AbortSignal;
 }): Promise<SendResult> {
   const picked = selectCoins(opts.coins, opts.amount, opts.onlyFrom);
   const request = buildSignRequest({ ...opts, coins: picked });
@@ -195,6 +201,7 @@ export async function sendBch(opts: {
   // request is cast to the manager's parameter type.
   const response = await opts.manager.signTransaction(
     request as unknown as Parameters<DappConnectionManager["signTransaction"]>[0],
+    opts.signal ? { signal: opts.signal } : undefined,
   );
   if (response.error) throw new Error(response.error);
 
