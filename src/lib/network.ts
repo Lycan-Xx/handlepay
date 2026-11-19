@@ -12,7 +12,7 @@ export const PREFIX: Record<BchNetwork, "bchtest" | "bitcoincash"> = {
 export const explorerTx = (network: BchNetwork, txid: string) =>
   network === "mainnet"
     ? `https://blockchair.com/bitcoin-cash/transaction/${txid}`
-    : `https://chipnet.chaingraph.cash/tx/${txid}`;
+    : `https://chipnet.imaginary.cash/tx/${txid}`;
 
 /**
  * Electrum providers are cached per network. Each one opens a WebSocket to a
