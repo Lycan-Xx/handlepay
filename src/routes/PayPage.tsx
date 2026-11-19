@@ -1,0 +1,105 @@
+/**
+ * /pay/<handle>: check the name, then pay it.
+ *
+ * Order matters. The name is resolved first and the badge decides whether a
+ * payment is allowed at all (paymentGate). Verified pays straight away;
+ * Claimed needs an explicit "pay anyway"; Changed needs the payer to
+ * acknowledge the new address; Not found cannot be paid. The address paid is
+ * always the one the resolver returned, never anything from the URL.
+ */
+import { useEffect, useMemo, useState } from "react";
+import { VerifyCard } from "../components/VerifyCard";
+import type { Wallet } from "../hooks/useWallet";
+import type { BchNetwork } from "../lib/network";
+import { parseHandle } from "../lib/nostr";
+import { parsePayParams } from "../lib/paylink";
+import { getPin, pinResolution } from "../lib/pins";
+import { liveDeps, paymentGate, resolveHandle, type Resolution } from "../lib/resolve";
+
+export function PayPage(props: { handle: string; search: URLSearchParams; wallet: Wallet; network: BchNetwork }) {
+  const { handle, search, network } = props;
+  const params = useMemo(() => parsePayParams(search), [search]);
+  const [resolution, setResolution] = useState<Resolution | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  /** The payer accepted a Claimed or Changed result. */
+  const [accepted, setAccepted] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setResolution(null);
+    setError(null);
+    setAccepted(false);
+    const parsed = parseHandle(handle);
+    const pin = parsed ? getPin(network, parsed.full) : null;
+    resolveHandle(handle, network, liveDeps(network), pin)
+      .then((r) => {
+        if (cancelled) return;
+        // Trust on first use: remember a Verified result so a later change is caught.
+        if (r.status === "verified") pinResolution(network, r);
+        setResolution(r);
+      })
+      .catch((e: Error) => !cancelled && setError(e.message));
+    return () => {
+      cancelled = true;
+    };
+  }, [handle, network, attempt]);
+
+  const gate = resolution ? paymentGate(resolution) : "blocked";
+  const canPay = gate === "allowed" || (accepted && (gate === "confirm_unverified" || gate === "acknowledge_change"));
+
+  const acknowledgeChange = () => {
+    if (!resolution) return;
+    pinResolution(network, resolution);
+    setAccepted(true);
+  };
+
+  return (
+    <>
+      <VerifyCard
+        handle={handle}
+        network={network}
+        resolution={resolution}
+        error={error}
+        onRetry={() => setAttempt((n) => n + 1)}
+      />
+
+      {params.ignored.length > 0 && (
+        <p className="warn">
+          This link tried to set the recipient ({params.ignored.join(", ")}). HandlePay ignores that: it only pays the
+          address the name proves.
+        </p>
+      )}
+
+      {gate === "confirm_unverified" && !accepted && (
+        <section className="card">
+          <p>
+            This address is only <strong>claimed</strong>. Nobody has proven that the person behind this name controls
+            it.
+          </p>
+          <button className="ghost" onClick={() => setAccepted(true)}>
+            Pay anyway
+          </button>
+        </section>
+      )}
+
+      {gate === "acknowledge_change" && !accepted && (
+        <section className="card">
+          <p>
+            This name pointed somewhere else last time. If you weren't expecting that, ask the person through another
+            channel before paying.
+          </p>
+          <button className="ghost" onClick={acknowledgeChange}>
+            I've checked, use the new address
+          </button>
+        </section>
+      )}
+
+      {canPay && resolution?.address && (
+        <section className="card">
+          <p className="muted">Payment comes next.</p>
+        </section>
+      )}
+    </>
+  );
+}
