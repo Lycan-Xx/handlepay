@@ -104,8 +104,10 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
 
       {run && run.victim.status !== "verified" && (
         <p className="warn">
-          The attacks need a name that is Verified on {network}, so there is something real to copy. Try{" "}
-          {DEMO_HANDLES[network]} or switch network.
+          The attacks need a name that is Verified on {network}, so there is something real to copy.{" "}
+          {victimHandle.toLowerCase() === DEMO_HANDLES[network]
+            ? `${DEMO_HANDLES[network]} isn't set up on ${network} yet; switch network to see the demo.`
+            : `Try ${DEMO_HANDLES[network]} or switch network.`}
         </p>
       )}
 
