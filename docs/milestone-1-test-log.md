@@ -85,6 +85,11 @@ With everything in place:
 - `scripts/check-binding.mjs` independently confirmed every relay held both events with valid signatures, the right `payto` and `proof` tags, and `network: chipnet`.
 - **Resolve** returned **Verified** with all six checks ticked: the domain lists the name, the key signed the binding, the proof was paid from this address, the proof names this key, the proof is confirmed, and the binding is for chipnet.
 
+### Revoke and republish (Part 5c)
+- **Revoke:** after pressing Revoke and signing, Resolve returned **Not found · Binding revoked**. The name still resolved to the key, but the key's newest signed event cancelled the binding, so the app refused to verify it.
+- **Republish:** signing and publishing the binding again, reusing the remembered proof with no new transaction, made Resolve return **Verified** again.
+- **What it proves:** the newest event always wins, so a binding can be revoked and later restored.
+
 ## Findings worth keeping
 
 1. **Do not trust a wallet to broadcast.** Verify that the network knows the txid before showing it, and broadcast the signed hex yourself if it does not.
@@ -105,7 +110,6 @@ With everything in place:
 ## Not covered yet
 
 - Mainnet; this ran on chipnet only.
-- The revoke and republish round trip (Part 5c), unless confirmed separately.
 - The pay-by-name flow and the Changed warning, which need the `/pay` page.
 - Attacks such as one person reusing another's proof. The unit tests cover these; the `/security` page will show them live.
 - Other wallets. Selene is the first column filled in; Cashonize and Paytaca remain.
