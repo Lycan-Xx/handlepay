@@ -199,7 +199,33 @@ export async function sendBch(opts: {
   if (response.error) throw new Error(response.error);
 
   const txid = txidOf(response.signedTransaction);
+  await ensureBroadcast(opts.network, txid, response.signedTransaction);
   return { txid, signedTransaction: response.signedTransaction };
+}
+
+/**
+ * The request asks the wallet to broadcast, but not every wallet does (Selene
+ * signed without broadcasting in testing). Give the network a moment to show
+ * the transaction; if it still isn't known, broadcast the signed hex ourselves.
+ * Re-sending an already-known transaction is harmless.
+ */
+async function ensureBroadcast(network: BchNetwork, txid: string, hex: string): Promise<void> {
+  const provider = getProvider(network);
+  for (let i = 0; i < 3; i++) {
+    await new Promise((r) => setTimeout(r, 1500));
+    try {
+      await provider.getRawTransaction(txid);
+      return;
+    } catch {
+      /* not visible yet */
+    }
+  }
+  try {
+    await provider.sendRawTransaction(hex);
+  } catch (e) {
+    // An "already known" error means the wallet's broadcast landed after all.
+    if (!/already|known|duplicate|txn-already/i.test((e as Error).message)) throw e;
+  }
 }
 
 /** Transaction id of a raw transaction (double SHA-256, byte-reversed hex). */
