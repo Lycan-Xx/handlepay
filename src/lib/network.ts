@@ -8,11 +8,30 @@ export const PREFIX: Record<BchNetwork, "bchtest" | "bitcoincash"> = {
   mainnet: "bitcoincash",
 };
 
-/** Block explorer link for a transaction id. */
-export const explorerTx = (network: BchNetwork, txid: string) =>
+/**
+ * Link to HandlePay's own transaction page. Public chipnet explorers proved
+ * unreliable (some only show unconfirmed transactions, one sits behind a bot
+ * check), so links go to /tx/<txid>, which reads the transaction from the same
+ * server the app already uses. The network is in the link so a shared link
+ * shows the right chain. Absolute when a browser origin is available, so a
+ * copied receipt carries a working link.
+ */
+export const explorerTx = (network: BchNetwork, txid: string) => {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/tx/${txid}?network=${network}`;
+};
+
+/** Third-party explorers, offered as a second opinion on the transaction page. */
+export const externalExplorers = (network: BchNetwork, txid: string): { name: string; url: string }[] =>
   network === "mainnet"
-    ? `https://blockchair.com/bitcoin-cash/transaction/${txid}`
-    : `https://chipnet.imaginary.cash/tx/${txid}`;
+    ? [
+        { name: "Blockchair", url: `https://blockchair.com/bitcoin-cash/transaction/${txid}` },
+        { name: "Blockchain.com", url: `https://www.blockchain.com/explorer/transactions/bch/${txid}` },
+      ]
+    : [
+        { name: "Chaingraph", url: `https://chipnet.chaingraph.cash/tx/${txid}` },
+        { name: "Imaginary (unconfirmed only)", url: `https://chipnet.imaginary.cash/tx/${txid}` },
+      ];
 
 /**
  * Electrum providers are cached per network. Each one opens a WebSocket to a

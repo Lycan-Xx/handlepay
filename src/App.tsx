@@ -4,6 +4,7 @@ import { useWallet } from "./hooks/useWallet";
 import { navigate, useRoute } from "./lib/router";
 import { DevHome } from "./routes/DevHome";
 import { PayPage } from "./routes/PayPage";
+import { TxPage } from "./routes/TxPage";
 import "./App.css";
 
 export default function App() {
@@ -38,6 +39,9 @@ export default function App() {
       {route.name === "home" && <DevHome wallet={wallet} network={network} />}
       {route.name === "pay" && (
         <PayPage key={`${route.handle}|${network}`} handle={route.handle} search={search} wallet={wallet} network={network} />
+      )}
+      {route.name === "tx" && (
+        <TxPage key={`${route.txid}|${search.get("network") ?? network}`} txid={route.txid} search={search} network={network} />
       )}
       {route.name === "not_found" && (
         <section className="card">
