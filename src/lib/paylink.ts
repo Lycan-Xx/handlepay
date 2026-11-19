@@ -97,10 +97,26 @@ export function receiptText(r: Receipt, bch: (sats: bigint) => string): string {
   ].join("\n");
 }
 
-/** Map a wallet or relay failure to one sentence that says what to do next. */
-export function paymentErrorMessage(e: unknown, aborted: boolean): string {
+/** A wallet saying the coins it was asked to spend don't exist or are spent. */
+const MISSING_COINS = /missing.?inputs?|missingorspent|inputs?-spent|utxos? (is|are) missing|missing or already spent|already spent/i;
+
+/**
+ * Map a wallet or relay failure to one sentence that says what to do next.
+ *
+ * WizardConnect carries no network, so a wallet set to the other network signs
+ * our transaction but can't find its coins: Cashonize then refuses ("one of its
+ * UTXOs is missing or already spent"). That case is checked before the
+ * cancellation words, because such messages also say "rejected".
+ */
+export function paymentErrorMessage(e: unknown, aborted: boolean, network?: "chipnet" | "mainnet"): string {
   if (aborted) return "Payment cancelled. Nothing was sent.";
   const message = e instanceof Error ? e.message : String(e);
+  if (MISSING_COINS.test(message)) {
+    const other = network === "mainnet" ? "chipnet" : "mainnet";
+    return network
+      ? `Your wallet couldn't find the coins for this payment, so nothing was sent. It's probably set to ${other} while this page is on ${network}: switch the wallet to ${network} and try again. If it is on ${network}, press Refresh and retry.`
+      : "Your wallet couldn't find the coins for this payment, so nothing was sent. Check that the wallet and this page are on the same network, then try again.";
+  }
   if (/reject|denied|declin|cancel/i.test(message)) return "Payment cancelled in your wallet. Nothing was sent.";
   return message;
 }

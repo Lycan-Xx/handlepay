@@ -7,6 +7,7 @@ import { useState } from "react";
 import type { DappConnectionManager } from "@wizardconnect/dapp";
 import { buildBindingEvent, buildPaytoEvent, buildRevokeEvent, proofOpReturnChunks } from "../lib/binding";
 import { explorerTx, type BchNetwork } from "../lib/network";
+import { paymentErrorMessage } from "../lib/paylink";
 import { DEFAULT_RELAYS, hasSigner, publishEvent, signWithExtension, signerPubkey, type PublishResult } from "../lib/nostr";
 import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
 import { sendBch, type WalletCoin } from "../lib/wallet";
@@ -51,7 +52,7 @@ export function IdentityDev(props: {
     try {
       await fn();
     } catch (e) {
-      setError((e as Error).message);
+      setError(paymentErrorMessage(e, false, network));
     } finally {
       setBusy(null);
     }

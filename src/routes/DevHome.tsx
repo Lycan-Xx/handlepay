@@ -7,6 +7,7 @@ import { useState } from "react";
 import { IdentityDev } from "../components/IdentityDev";
 import type { Wallet } from "../hooks/useWallet";
 import { explorerTx, type BchNetwork } from "../lib/network";
+import { paymentErrorMessage } from "../lib/paylink";
 import { navigate, payPath } from "../lib/router";
 import { formatBch, sendBch } from "../lib/wallet";
 
@@ -39,7 +40,7 @@ export function DevHome({ wallet, network }: { wallet: Wallet; network: BchNetwo
       setTimeout(refresh, 3000);
     } catch (e) {
       setStatus(null);
-      setError((e as Error).message);
+      setError(paymentErrorMessage(e, false, network));
     }
   };
 

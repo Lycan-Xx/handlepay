@@ -119,7 +119,7 @@ export function PayPanel(props: {
       });
       setTimeout(wallet.refresh, 3_000);
     } catch (e) {
-      setError(paymentErrorMessage(e, controller.signal.aborted));
+      setError(paymentErrorMessage(e, controller.signal.aborted, network));
     } finally {
       clearTimeout(slowTimer);
       abortRef.current = null;

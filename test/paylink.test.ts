@@ -90,6 +90,24 @@ describe("receiptText", () => {
   });
 });
 
+describe("paymentErrorMessage: wallet on the other network", () => {
+  const cashonize =
+    "The transaction was rejected because one of its UTXOs is missing or already spent. Nothing was sent. The dApp has to build the transaction again: refresh the dApp and repeat the action.";
+
+  it("names the likely network mismatch instead of calling it a cancellation", () => {
+    const text = paymentErrorMessage(new Error(cashonize), false, "chipnet");
+    expect(text).toContain("couldn't find the coins");
+    expect(text).toContain("set to mainnet while this page is on chipnet");
+    expect(text).not.toContain("cancelled");
+  });
+
+  it("recognises node wording too", () => {
+    for (const m of ["Missing inputs", "missing-inputs", "bad-txns-inputs-missingorspent"]) {
+      expect(paymentErrorMessage(new Error(m), false, "mainnet")).toContain("set to chipnet while this page is on mainnet");
+    }
+  });
+});
+
 describe("paymentErrorMessage", () => {
   it("says plainly when nothing was sent", () => {
     expect(paymentErrorMessage(new Error("x"), true)).toBe("Payment cancelled. Nothing was sent.");
