@@ -29,7 +29,9 @@ export default function App() {
   const connected = wc.state === "connected" && wc.manager;
   const addresses = useMemo(
     () => (connected ? deriveAddresses(wc.manager!, network) : []),
-    [connected, wc.manager, network],
+    // walletName is set when the wallet's keys arrive, so it re-runs the derivation then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [connected, wc.manager, wc.walletName, network],
   );
   const receiveAddress = addresses.find((a) => a.path === "receive" && a.index === 0)?.address;
   const changeAddress = addresses.find((a) => a.path === "change" && a.index === 0)?.address;
@@ -138,7 +140,14 @@ export default function App() {
         <section className="card">
           <h2>2. Your wallet</h2>
           <p className="label">Receive address</p>
-          <code className="addr">{receiveAddress}</code>
+          {receiveAddress ? (
+            <code className="addr">{receiveAddress}</code>
+          ) : (
+            <p className="muted">
+              Waiting for {wc.walletName ?? "the wallet"} to share its keys. If this stays empty, disconnect and
+              reconnect.
+            </p>
+          )}
           <p className="label">Balance (scanned {addresses.length} addresses)</p>
           <p className="big">{formatBch(balance)} {network === "chipnet" ? "tBCH" : "BCH"}</p>
           <button className="ghost" onClick={refresh} disabled={loading}>
