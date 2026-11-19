@@ -25,7 +25,7 @@ export function PayPanel(props: {
   params: PayParams;
 }) {
   const { wallet, network, handle, address, params } = props;
-  const { wc, connected, connect, receiveAddress, changeAddress, coins, balance, scanned, loading } = wallet;
+  const { wc, connected, restoring, connect, receiveAddress, changeAddress, coins, balance, scanned, loading } = wallet;
 
   const amountFixed = params.amountUsd !== null;
   const [unit, setUnit] = useState<Unit>("usd");
@@ -129,7 +129,7 @@ export function PayPanel(props: {
 
   if (receipt) return <Receipt receipt={receipt} network={network} />;
 
-  const emptyWallet = connected && scanned && !loading && balance === 0n;
+  const emptyWallet = (connected || restoring) && scanned && !loading && balance === 0n;
 
   return (
     <section className="card pay">
@@ -199,7 +199,7 @@ export function PayPanel(props: {
         />
       </label>
 
-      {!connected ? (
+      {!connected && !restoring ? (
         <>
           <button onClick={connect}>
             {wc.state === "connecting" || wc.state === "reconnecting" ? "Show QR" : "Connect wallet to pay"}
@@ -216,13 +216,20 @@ export function PayPanel(props: {
                 {" "}
                 · {formatBch(balance)} {unitLabel}
               </span>
-            )}{" "}
+            )}
+            {restoring && <span className="muted"> · reconnecting…</span>}{" "}
             <button className="link" onClick={() => wc.disconnect()} disabled={phase === "approving"}>
               Disconnect
             </button>
           </p>
 
           {!receiveAddress && <p className="muted">Waiting for your wallet to share its keys…</p>}
+          {restoring && (
+            <p className="muted small">
+              Waiting for {wc.walletName ?? "your wallet"} to answer before it can sign. If this takes more than a few
+              seconds, open the wallet app.
+            </p>
+          )}
 
           {emptyWallet && (
             <p className="warn">
@@ -252,7 +259,7 @@ export function PayPanel(props: {
               </button>
             </div>
           ) : (
-            <button onClick={pay} disabled={!ready || !changeAddress || !coins.length}>
+            <button onClick={pay} disabled={!connected || !ready || !changeAddress || !coins.length}>
               {ready ? `Pay ${label} to ${handle}` : "Pay"}
             </button>
           )}

@@ -12,7 +12,7 @@ import { navigate, payPath } from "../lib/router";
 import { formatBch, sendBch } from "../lib/wallet";
 
 export function DevHome({ wallet, network }: { wallet: Wallet; network: BchNetwork }) {
-  const { wc, connected, connect, addresses, receiveAddress, changeAddress, coins, balance, loading, refresh } = wallet;
+  const { wc, connected, restoring, connect, addresses, receiveAddress, changeAddress, coins, balance, loading, refresh } = wallet;
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("1000");
   const [status, setStatus] = useState<string | null>(null);
@@ -66,11 +66,17 @@ export function DevHome({ wallet, network }: { wallet: Wallet; network: BchNetwo
 
       <section className="card">
         <h2>1. Connect wallet</h2>
-        {connected ? (
+        {connected || restoring ? (
           <>
             <p>
-              Connected to <strong>{wc.walletName ?? "wallet"}</strong>
+              {connected ? "Connected to" : "Reconnecting to"} <strong>{wc.walletName ?? "wallet"}</strong>
             </p>
+            {restoring && (
+              <p className="muted">
+                Your balance is shown from the last session. Signing waits until the wallet answers; open the wallet
+                app if this takes more than a few seconds.
+              </p>
+            )}
             <button className="ghost" onClick={() => wc.disconnect()}>
               Disconnect
             </button>
@@ -86,7 +92,7 @@ export function DevHome({ wallet, network }: { wallet: Wallet; network: BchNetwo
         )}
       </section>
 
-      {connected && (
+      {(connected || restoring) && (
         <section className="card">
           <h2>2. Your wallet</h2>
           <p className="label">Receive address</p>
