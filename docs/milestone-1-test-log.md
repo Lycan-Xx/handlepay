@@ -92,6 +92,25 @@ With everything in place:
 - **Republish:** signing and publishing the binding again, reusing the remembered proof with no new transaction, made Resolve return **Verified** again.
 - **What it proves:** the newest event always wins, so a binding can be revoked and later restored.
 
+### Other wallets on the pay page (Nov 19)
+Once `/pay` existed, the same chipnet payment was repeated from Paytaca and Cashonize. Both showed an error after approval, even though the payment had been approved.
+
+- **What the wallets said:**
+  - Paytaca showed "missing-inputs".
+  - Cashonize said one of the transaction's coins was "missing or already spent". HandlePay first labelled this "cancelled" because the message contains the word "rejected".
+- **What the chain said:** the Paytaca payments were on chipnet anyway. Transaction `97854e5e…8469` was signed by Paytaca, broadcast by HandlePay's fallback, and confirmed about four minutes later. The `/tx` page and Chaingraph agreed.
+- **Diagnosis:** both wallets were set to mainnet.
+  - They signed correctly, because the keys are the same on both networks.
+  - Each wallet then broadcast to its own mainnet server. That server had never seen the chipnet coins, so it answered "missing inputs".
+  - HandlePay, which checks chipnet itself, saw the transaction was absent and broadcast it.
+- **Confirmation:**
+  - **Cashonize:** after switching to chipnet, it paid with no error.
+  - **Paytaca:** still shows "missing-inputs" because the tester could not find a chipnet switch in its settings. Its payments still arrive through the fallback, and the receipt explains this.
+  - **Selene:** works the same way through the fallback, with rough edges still to note.
+- **Fixes:**
+  - `90e7e24` recognises a wallet that broadcasts its own version of the payment.
+  - `f6a1224` replaces the raw errors with a sentence naming the likely network mismatch, and stops calling Cashonize's message a cancellation.
+
 ## Findings worth keeping
 
 1. **Do not trust a wallet to broadcast to the right network.** Verify that the network knows the txid before showing it, and broadcast the signed hex yourself if it does not.
@@ -113,6 +132,13 @@ With everything in place:
 ## Not covered yet
 
 - Mainnet; this ran on chipnet only.
-- The pay-by-name flow and the Changed warning, which need the `/pay` page.
 - Attacks such as one person reusing another's proof. The unit tests cover these; the `/security` page will show them live.
-- Other wallets. Selene's column: Pair ✓, Plain send ✓ (signs; mainnet-only, so its own broadcast can't reach chipnet), Proof transaction ✓. Cashonize and Paytaca remain, and Selene should be rechecked on mainnet.
+- **Wallet matrix on chipnet:**
+
+  | Wallet | Pair | Pay by name | Wallet's own broadcast | Notes |
+  |---|---|---|---|---|
+  | Cashonize | ✓ | ✓ | ✓ once set to chipnet | Clean run after switching networks |
+  | Paytaca | ✓ | ✓ (arrives through HandlePay's fallback) | ✗ "missing-inputs" | Chipnet switch not found in settings; recheck once it is |
+  | Selene | ✓ | ✓ (arrives through HandlePay's fallback) | ✗ (mainnet-only) | Also ran the proof transaction; recheck on mainnet |
+
+- **Mainnet:** all three wallets still need a mainnet run.
