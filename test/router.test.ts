@@ -7,7 +7,8 @@ describe("matchRoute", () => {
     expect(matchRoute("")).toEqual({ name: "home" });
   });
 
-  it("matches the security and sign-in pages", () => {
+  it("matches the security, sign-in and developer pages", () => {
+    expect(matchRoute("/dev/")).toEqual({ name: "dev" });
     expect(matchRoute("/security")).toEqual({ name: "security" });
     expect(matchRoute("/auth/")).toEqual({ name: "auth" });
     expect(matchRoute("/security/extra").name).toBe("not_found");
@@ -34,6 +35,12 @@ describe("payPath", () => {
     expect(payPath("sani@lycanforge.com.ng")).toBe("/pay/sani@lycanforge.com.ng");
     expect(payPath("sani@lycanforge.com.ng", { amount: "0.25", memo: "Invoice 7" })).toBe(
       "/pay/sani@lycanforge.com.ng?amount=0.25&memo=Invoice+7",
+    );
+  });
+
+  it("can name the network, for links to a name on the other network", () => {
+    expect(payPath("sani@lycanforge.com.ng", { amount: "0.25", network: "mainnet" })).toBe(
+      "/pay/sani@lycanforge.com.ng?amount=0.25&network=mainnet",
     );
   });
 

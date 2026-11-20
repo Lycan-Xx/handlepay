@@ -1,9 +1,12 @@
+import { useEffect } from "react";
+import { Banner } from "./components/Banner";
 import { WalletQR } from "./components/WalletQR";
 import { useNetwork } from "./hooks/useNetwork";
 import { useWallet } from "./hooks/useWallet";
 import { navigate, useRoute } from "./lib/router";
 import { DevHome } from "./routes/DevHome";
 import { AuthPage } from "./routes/AuthPage";
+import { HomePage } from "./routes/HomePage";
 import { PayPage } from "./routes/PayPage";
 import { SecurityPage } from "./routes/SecurityPage";
 import { TxPage } from "./routes/TxPage";
@@ -13,6 +16,14 @@ export default function App() {
   const [network, setNetwork] = useNetwork();
   const wallet = useWallet(network);
   const { route, search } = useRoute();
+
+  // A link can name its network (?network=mainnet), so a pay link to a mainnet name works from a chipnet browser.
+  const linkNetwork = search.get("network");
+  useEffect(() => {
+    if ((linkNetwork === "chipnet" || linkNetwork === "mainnet")) setNetwork(linkNetwork);
+    // Only when the link changes: after that, the network buttons are the user's to press.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkNetwork]);
 
   const goHome = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -25,6 +36,7 @@ export default function App() {
 
   return (
     <main className="shell">
+      <Banner />
       <header className="top">
         <h1>
           <a href="/" className="brand" onClick={goHome}>
@@ -50,7 +62,8 @@ export default function App() {
 
       {network === "mainnet" && <p className="warn">Mainnet uses real money. Keep amounts tiny.</p>}
 
-      {route.name === "home" && <DevHome wallet={wallet} network={network} />}
+      {route.name === "home" && <HomePage />}
+      {route.name === "dev" && <DevHome wallet={wallet} network={network} />}
       {route.name === "pay" && (
         <PayPage key={`${route.handle}|${network}`} handle={route.handle} search={search} wallet={wallet} network={network} />
       )}

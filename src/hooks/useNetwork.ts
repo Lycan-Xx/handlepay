@@ -6,6 +6,9 @@ const NETWORK_KEY = "handlepay-network";
 /** The chipnet/mainnet choice, remembered in this browser. */
 export function useNetwork(): [BchNetwork, (next: BchNetwork) => void] {
   const [network, setNetwork] = useState<BchNetwork>(() => {
+    // A link that names its network wins from the first render, so the page doesn't start on the other one.
+    const fromLink = new URLSearchParams(window.location.search).get("network");
+    if (fromLink === "chipnet" || fromLink === "mainnet") return fromLink;
     try {
       const stored = localStorage.getItem(NETWORK_KEY);
       return stored === "mainnet" ? "mainnet" : "chipnet";

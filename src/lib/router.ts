@@ -5,9 +5,11 @@
  * /pay/sani@lycanforge.com.ng load the app directly.
  */
 import { useEffect, useState } from "react";
+import type { BchNetwork } from "./network";
 
 export type Route =
   | { name: "home" }
+  | { name: "dev" }
   | { name: "pay"; handle: string }
   | { name: "tx"; txid: string }
   | { name: "security" }
@@ -17,6 +19,7 @@ export type Route =
 export function matchRoute(pathname: string): Route {
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/") return { name: "home" };
+  if (path === "/dev") return { name: "dev" };
   if (path === "/security") return { name: "security" };
   if (path === "/auth") return { name: "auth" };
   const tx = /^\/tx\/([0-9a-fA-F]{64})$/.exec(path);
@@ -59,11 +62,16 @@ export function useRoute(): { route: Route; search: URLSearchParams } {
   return state;
 }
 
-/** Path for a pay link. The handle keeps its "@" so the link stays readable. */
-export function payPath(handle: string, params?: { amount?: string; memo?: string }): string {
+/**
+ * Path for a pay link. The handle keeps its "@" so the link stays readable.
+ * `network` makes the page switch to that network, so a link to a mainnet
+ * name works for someone whose browser is still on chipnet.
+ */
+export function payPath(handle: string, params?: { amount?: string; memo?: string; network?: BchNetwork }): string {
   const query = new URLSearchParams();
   if (params?.amount) query.set("amount", params.amount);
   if (params?.memo) query.set("memo", params.memo);
+  if (params?.network) query.set("network", params.network);
   const q = query.toString();
   return `/pay/${encodeURIComponent(handle).replace(/%40/g, "@")}${q ? `?${q}` : ""}`;
 }
