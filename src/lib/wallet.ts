@@ -110,7 +110,8 @@ export interface SignRequest {
   transaction: {
     transaction: string;
     sourceOutputs: ReturnType<typeof sourceOutputToRelay>[];
-    broadcast: true;
+    /** Always false: the wallet only signs, and HandlePay broadcasts (see sendBch). */
+    broadcast: false;
     userPrompt?: string;
   };
   inputPaths: [number, PathName, number][];
@@ -152,12 +153,12 @@ export function buildSignRequest(spec: PaymentSpec): SignRequest {
   if (opReturn) builder.addOpReturnOutput(opReturn);
   builder.addBchChangeOutputIfNeeded({ to: changeAddress, feeRate: 1 });
 
-  const wc = builder.generateWcTransactionObject({ broadcast: true, userPrompt });
+  const wc = builder.generateWcTransactionObject({ broadcast: false, userPrompt });
   return {
     transaction: {
       transaction: binToHex(encodeTransaction(wc.transaction)),
       sourceOutputs: wc.sourceOutputs.map(sourceOutputToRelay),
-      broadcast: true,
+      broadcast: false,
       userPrompt,
     },
     inputPaths: coins.map((coin, i) => [i, coin.owner.path, coin.owner.index]),
@@ -176,9 +177,18 @@ export interface SendResult {
  * Pay `amount` satoshis to `to` from the connected wallet.
  *
  * Steps: pick coins, build the transaction with placeholder unlockers, tell the
- * wallet which HD key signs each input (inputPaths), let the wallet sign and
- * broadcast, then return the txid. Every transaction the app makes goes
- * through here.
+ * wallet which HD key signs each input (inputPaths), let the wallet sign, then
+ * broadcast it from this page and return the txid. Every transaction the app
+ * makes goes through here.
+ *
+ * The wallet is asked not to broadcast. Its own broadcast goes through its own
+ * backend on whatever network the wallet happens to be set to, and either can
+ * fail where ours wouldn't: a wallet on the other network sends the payment
+ * where its coins don't exist, and Paytaca throws away a signed payment when
+ * its server (watchtower.cash) is down, as it was during the mainnet test.
+ * HandlePay already knows the right network and has its own server, so it
+ * sends the payment itself. A wallet that broadcasts anyway is harmless:
+ * ensureBroadcast treats "already known" as success.
  */
 export async function sendBch(opts: {
   manager: DappConnectionManager;
@@ -210,13 +220,24 @@ export async function sendBch(opts: {
   if (response.error) throw new Error(response.error);
 
   const signedTxid = txidOf(response.signedTransaction);
-  const broadcast = await ensureBroadcast({
-    provider: getProvider(opts.network),
-    txid: signedTxid,
-    hex: response.signedTransaction,
-    inputAddresses: picked.map((c) => c.owner.address),
-    changeAddress: opts.changeAddress,
-  });
+  let broadcast: BroadcastResult;
+  try {
+    broadcast = await ensureBroadcast({
+      provider: getProvider(opts.network),
+      txid: signedTxid,
+      hex: response.signedTransaction,
+      inputAddresses: picked.map((c) => c.owner.address),
+      changeAddress: opts.changeAddress,
+    });
+  } catch (e) {
+    // Sending is now this page's job, so say plainly that signing worked and sending didn't. A timeout may still
+    // have reached the server, hence "check" rather than "nothing was sent".
+    const reason = e instanceof Error ? e.message : String(e);
+    throw new Error(
+      `Your wallet signed the payment, but HandlePay couldn't send it to the ${opts.network} network (${reason}). ` +
+        "Check your balance before trying again.",
+    );
+  }
   return { txid: broadcast.txid, signedTransaction: response.signedTransaction, broadcast };
 }
 

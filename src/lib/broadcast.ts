@@ -2,15 +2,15 @@
  * Make sure a signed transaction is on the network, and find out which
  * transaction actually is.
  *
- * Every request asks the wallet to broadcast, but what lands is not always
- * the hex the wallet handed back:
+ * Sign requests ask the wallet not to broadcast (see sendBch), so normally
+ * this sends the transaction straight away. Wallets aren't bound to obey,
+ * so the cases from when they did broadcast are still handled:
  *
- * - A wallet on the wrong network broadcasts to that network, where it fails.
- *   Pairing and signing carry no network, so a mainnet-only wallet (Selene)
- *   signs chipnet transactions correctly and they never arrive. We re-send.
+ * - The wallet's broadcast already landed: the server says "already known",
+ *   which counts as success.
  * - A wallet may broadcast its own version of the transaction and return a
  *   different encoding (Paytaca, in testing). The coins are then already spent,
- *   re-sending fails with "missing inputs", and the txid computed from the
+ *   sending fails with "missing inputs", and the txid computed from the
  *   returned hex isn't on the network. We look up the transaction that spent
  *   the coins and, if it pays the same outputs, report that one.
  */
@@ -31,9 +31,9 @@ export interface BroadcastProvider {
 }
 
 export type BroadcastStatus =
-  /** The network already had our transaction (the wallet's broadcast worked). */
+  /** The network already had our transaction (the wallet broadcast it after all). */
   | "seen"
-  /** The network didn't have it; we sent it ourselves. */
+  /** We sent it: the normal case. */
   | "sent"
   /** The wallet broadcast its own version; `txid` is that version. */
   | "replaced"
@@ -60,11 +60,15 @@ export async function ensureBroadcast(opts: {
   inputAddresses: string[];
   /** Outputs to the wallet's own change address may differ in a replacement; others must match. */
   changeAddress?: string;
-  /** Poll delays in ms; shortened in tests. */
+  /**
+   * Poll delays in ms. `before`: checks for the wallet's own broadcast before
+   * sending (none by default, since the wallet is asked not to). `after`: how
+   * long to look for the wallet's version when the coins turn out spent.
+   */
   waits?: { before: number[]; after: number[] };
 }): Promise<BroadcastResult> {
   const { provider, txid, hex } = opts;
-  const waits = opts.waits ?? { before: [1_500, 1_500, 1_500], after: [2_000, 3_000, 4_000] };
+  const waits = opts.waits ?? { before: [], after: [2_000, 3_000, 4_000] };
 
   const known = async (id: string) => {
     try {

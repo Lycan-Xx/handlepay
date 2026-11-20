@@ -72,13 +72,6 @@ export function Receipt({ receipt, network }: { receipt: ReceiptData; network: B
         ))}
       </ol>
       <p className="muted">{STEPS[currentIndex].hint}</p>
-      {receipt.broadcast?.status === "sent" && (
-        <p className="muted">
-          Your wallet signed this but didn't put it on {network} itself, so HandlePay sent it for you. That usually means
-          the wallet is set to {network === "chipnet" ? "mainnet" : "chipnet"}; if it shows an error such as "missing
-          inputs", that's why, and the payment above still went through.
-        </p>
-      )}
       {receipt.broadcast?.status === "replaced" && (
         <p className="muted">
           Your wallet sent its own version of this payment. This receipt shows the one that is on the network.

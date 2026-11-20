@@ -81,7 +81,8 @@ describe("buildSignRequest", () => {
     expect(fee).toBeLessThanOrEqual(260n);
 
     expect(request.inputPaths).toEqual([[0, "receive", 0]]);
-    expect(request.transaction.broadcast).toBe(true);
+    // The wallet only signs; HandlePay broadcasts (Paytaca drops a signed payment if its own server is down).
+    expect(request.transaction.broadcast).toBe(false);
     expect(request.transaction.sourceOutputs).toHaveLength(1);
   });
 

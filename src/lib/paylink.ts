@@ -111,6 +111,8 @@ const MISSING_COINS = /missing.?inputs?|missingorspent|inputs?-spent|utxos? (is|
 export function paymentErrorMessage(e: unknown, aborted: boolean, network?: "chipnet" | "mainnet"): string {
   if (aborted) return "Payment cancelled. Nothing was sent.";
   const message = e instanceof Error ? e.message : String(e);
+  // Already worded by sendBch; the server's reason inside may contain "rejected", which isn't a wallet cancel.
+  if (message.startsWith("Your wallet signed the payment")) return message;
   if (MISSING_COINS.test(message)) {
     const other = network === "mainnet" ? "chipnet" : "mainnet";
     return network

@@ -63,6 +63,19 @@ describe("ensureBroadcast", () => {
     expect(sent).toHaveLength(0);
   });
 
+  it("sends at once by default, without waiting for a wallet broadcast it didn't ask for", async () => {
+    const { provider, sent } = server({});
+    let lookups = 0;
+    const counting = { ...provider, getRawTransaction: (id: string) => (lookups++, provider.getRawTransaction(id)) };
+    const { waits: _, ...noWaits } = base;
+    expect(await ensureBroadcast({ ...noWaits, provider: counting, txid: ours.txid, hex: ours.hex })).toEqual({
+      txid: ours.txid,
+      status: "sent",
+    });
+    expect(sent).toEqual([ours.hex]);
+    expect(lookups).toBe(0);
+  });
+
   it("sends the transaction itself when the network never got it (wallet on another network)", async () => {
     const { provider, sent } = server({});
     expect(await ensureBroadcast({ ...base, provider, txid: ours.txid, hex: ours.hex })).toEqual({ txid: ours.txid, status: "sent" });

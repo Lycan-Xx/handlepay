@@ -118,4 +118,10 @@ describe("paymentErrorMessage", () => {
       "You have 0.1 BCH; this needs about 0.2.",
     );
   });
+
+  it("doesn't call a failed send 'cancelled' because the server's reason says 'rejected'", () => {
+    const m =
+      "Your wallet signed the payment, but HandlePay couldn't send it to the mainnet network (the transaction was rejected by network rules). Check your balance before trying again.";
+    expect(paymentErrorMessage(new Error(m), false, "mainnet")).toBe(m);
+  });
 });
