@@ -111,9 +111,28 @@ Once `/pay` existed, the same chipnet payment was repeated from Paytaca and Cash
   - `90e7e24` recognises a wallet that broadcasts its own version of the payment.
   - `f6a1224` replaces the raw errors with a sentence naming the likely network mismatch, and stops calling Cashonize's message a cancellation.
 
+### Mainnet: Sani set up and paid (Nov 19–20)
+The first run with real money, on the live site `https://handlepay.lycanforge.com.ng`.
+
+- **Name:** `sani@lycanforge.com.ng`, with its own throwaway Nostr key (`c7ca5aa5…`). A key holds one binding at a time and lycan's key is bound on chipnet for the chipnet demo, so Sani could not reuse it. The name was added to the LycanForge site's `nostr.json` (LycanForge commit `4c2e186`) and was live within about 30 s.
+- **Coins:** bought in the Bitcoin.com app and sent to Selene's receive 0 address (24,260 sats) and to Paytaca.
+- **Proof:** `8c7356c2…ddd8`, sent from Selene. Checked on a mainnet Fulcrum server: one input of 24,260 sats from the bound address only; output 0 is `OP_RETURN HPAY 01 <c7ca5aa5…>`; 24,025 sats of change back to the same address; fee 235 sats.
+- **Binding:** published to 3/3 relays. After one confirmation, the pay page showed **Verified** on mainnet, paying to `bitcoincash:qqxeuaneldpe…xvl0`.
+- **Issue: the identity card kept disappearing.** Card 4 was shown only while WizardConnect said "connected". Selene's link drops whenever the phone locks, so the card unmounted and forgot the connected Nostr key. Fix `b5db8ec`: the card stays while the session is restoring, only the proof button waits for the wallet, and the Nostr key is kept for the tab (checked against the extension before a proof is sent).
+- **Issue: Paytaca said "Network Error" and nothing was sent.**
+  - **Cause:** Paytaca's server `watchtower.cash` was answering 502 Bad Gateway. Paytaca's WizardConnect code (read on GitHub) signs, broadcasts through that server, and when the call throws it reports only the error and discards the signed transaction.
+  - **Check:** Sani's address had no new transaction, and Paytaca's balance was untouched.
+  - **Fix `7141c20`:** sign requests now say `broadcast: false`. The wallet only signs, and HandlePay sends the transaction through its own Fulcrum server on the page's network. This also removes the chipnet "missing-inputs" errors, which came from wallets broadcasting to mainnet.
+- **Payment:** `3e3b8d68…4b15`, $0.25 from Paytaca to Sani, made while `watchtower.cash` was still returning 502. Checked on the mainnet server:
+  - one input of 243,025 sats from Paytaca
+  - 121,153 sats to Sani's verified address (about $0.25 at the time)
+  - 121,653 sats of change back to Paytaca
+  - fee 219 sats
+- **Result:** passed. A name resolves Verified on mainnet and is paid by name, with no HandlePay server and no dependency on the paying wallet's own backend.
+
 ## Findings worth keeping
 
-1. **Do not trust a wallet to broadcast to the right network.** Verify that the network knows the txid before showing it, and broadcast the signed hex yourself if it does not.
+1. **Don't let the wallet broadcast at all.** Wallets broadcast to whatever network they are set to, through their own backend, and either can fail. Ask for `broadcast: false` and send the signed hex yourself; still treat "already known" as success for wallets that broadcast anyway.
 2. **A wallet can sign for a network it isn't on.** Pairing and signing carry no network, so a mainnet-only wallet like Selene passes every chipnet check except broadcasting and showing a balance. Test chipnet with Cashonize or Paytaca; test Selene on mainnet.
 3. **Check the network first.** Most "nothing arrived" problems were wallet, faucet or explorer on different networks.
 4. **Verify against the chain, not the explorer.** When an explorer fails, query the Fulcrum server directly. It separates "the page is down" from "the transaction does not exist".
@@ -128,10 +147,11 @@ Once `/pay` existed, the same chipnet payment was repeated from Paytaca and Cash
 | `d9c05a0` | Broadcast the signed transaction ourselves if the wallet did not |
 | `0748484` | Re-derive wallet addresses when the wallet's keys arrive |
 | `05b6c8e` | Link chipnet transactions to chipnet.imaginary.cash |
+| `b5db8ec` | Keep the identity card on screen while the wallet reconnects |
+| `7141c20` | Have the wallet only sign, and broadcast payments from HandlePay |
 
 ## Not covered yet
 
-- Mainnet; this ran on chipnet only.
 - Attacks such as one person reusing another's proof. The unit tests cover these; the `/security` page will show them live.
 - **Wallet matrix on chipnet:**
 
@@ -141,4 +161,8 @@ Once `/pay` existed, the same chipnet payment was repeated from Paytaca and Cash
   | Paytaca | ✓ | ✓ (arrives through HandlePay's fallback) | ✗ "missing-inputs" | Chipnet switch not found in settings; recheck once it is |
   | Selene | ✓ | ✓ (arrives through HandlePay's fallback) | ✗ (mainnet-only) | Also ran the proof transaction; recheck on mainnet |
 
-- **Mainnet:** all three wallets still need a mainnet run.
+- **Mainnet:**
+  - Selene: proof transaction ✓; receiving ✓.
+  - Paytaca: paying by name ✓, with `broadcast: false`.
+  - Cashonize: not run on mainnet yet.
+  - The chipnet rows above predate `broadcast: false` and should be rechecked; the "missing-inputs" errors should be gone.
