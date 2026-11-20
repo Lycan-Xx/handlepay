@@ -13,12 +13,22 @@ import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
 import { sendBch, type WalletCoin } from "../lib/wallet";
 
 const PROOF_KEY = "handlepay-dev-proof";
+/** The Nostr key this tab connected, so a wallet reconnect doesn't make you connect it again. */
+const SIGNER_KEY = "handlepay-dev-signer";
 
 interface StoredProof {
   network: BchNetwork;
   address: string;
   pubkey: string;
   txid: string;
+}
+
+function loadSigner(): string | null {
+  try {
+    return sessionStorage.getItem(SIGNER_KEY);
+  } catch {
+    return null;
+  }
 }
 
 function loadProof(): StoredProof | null {
@@ -31,13 +41,16 @@ function loadProof(): StoredProof | null {
 
 export function IdentityDev(props: {
   manager: DappConnectionManager;
+  /** False while the wallet is reconnecting: everything works except asking it to sign. */
+  walletReady: boolean;
+  walletName: string;
   network: BchNetwork;
   coins: WalletCoin[];
   bindAddress: string;
   onSent: () => void;
 }) {
-  const { manager, network, coins, bindAddress, onSent } = props;
-  const [pubkey, setPubkey] = useState<string | null>(null);
+  const { manager, walletReady, walletName, network, coins, bindAddress, onSent } = props;
+  const [pubkey, setPubkey] = useState<string | null>(loadSigner);
   const [proof, setProof] = useState<StoredProof | null>(loadProof);
   const [nip05, setNip05] = useState("");
   const [published, setPublished] = useState<PublishResult | null>(null);
@@ -61,11 +74,30 @@ export function IdentityDev(props: {
   const currentProof = proof && proof.network === network && proof.address === bindAddress && proof.pubkey === pubkey ? proof : null;
   const fromAddress = coins.filter((c) => c.owner.address === bindAddress).reduce((s, c) => s + c.satoshis, 0n);
 
-  const connectNostr = () => run("nostr", async () => setPubkey(await signerPubkey()));
+  const connectNostr = () =>
+    run("nostr", async () => {
+      const key = await signerPubkey();
+      setPubkey(key);
+      try {
+        sessionStorage.setItem(SIGNER_KEY, key);
+      } catch {
+        /* keep in memory */
+      }
+    });
 
   const sendProof = () =>
     run("proof", async () => {
       if (!pubkey) return;
+      // The key may have been remembered from earlier in this tab; the proof is on chain for good, so check it first.
+      if ((await signerPubkey()) !== pubkey) {
+        setPubkey(null);
+        try {
+          sessionStorage.removeItem(SIGNER_KEY);
+        } catch {
+          /* nothing stored */
+        }
+        throw new Error("Your Nostr extension now holds a different key. Press Connect Nostr signer again.");
+      }
       const { txid } = await sendBch({
         manager,
         network,
@@ -128,9 +160,12 @@ export function IdentityDev(props: {
       <code className="addr">{bindAddress}</code>
       <p className="muted">Coins at this address: {fromAddress.toString()} sats (needs about 2,000)</p>
 
-      <button onClick={sendProof} disabled={!pubkey || !!busy || fromAddress < 2_000n}>
+      <button onClick={sendProof} disabled={!walletReady || !pubkey || !!busy || fromAddress < 2_000n}>
         {busy === "proof" ? "Approve in your wallet…" : "1. Send proof transaction"}
       </button>
+      {!walletReady && (
+        <p className="muted">Reconnecting to {walletName}. Open the wallet app to send the proof.</p>
+      )}
       {currentProof && (
         <p>
           Proof:{" "}

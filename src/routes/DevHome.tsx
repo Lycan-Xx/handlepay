@@ -153,9 +153,11 @@ export function DevHome({ wallet, network }: { wallet: Wallet; network: BchNetwo
         </section>
       )}
 
-      {connected && receiveAddress && wc.manager && (
+      {(connected || restoring) && receiveAddress && wc.manager && (
         <IdentityDev
           manager={wc.manager}
+          walletReady={connected}
+          walletName={wc.walletName ?? "the wallet"}
           network={network}
           coins={coins}
           bindAddress={receiveAddress}
