@@ -9,6 +9,7 @@ describe("matchRoute", () => {
 
   it("matches the security, sign-in and developer pages", () => {
     expect(matchRoute("/dev/")).toEqual({ name: "dev" });
+    expect(matchRoute("/identity")).toEqual({ name: "identity" });
     expect(matchRoute("/security")).toEqual({ name: "security" });
     expect(matchRoute("/auth/")).toEqual({ name: "auth" });
     expect(matchRoute("/security/extra").name).toBe("not_found");

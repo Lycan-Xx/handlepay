@@ -78,7 +78,7 @@ export function HomePage() {
       </section>
 
       <section className="entries">
-        <a className="card entry" href="/dev" onClick={go("/dev")}>
+        <a className="card entry" href="/identity" onClick={go("/identity")}>
           <h2>Get paid by name</h2>
           <p className="muted">Link your wallet to your name, then share a pay link instead of an address.</p>
         </a>

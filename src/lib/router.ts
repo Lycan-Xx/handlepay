@@ -10,6 +10,7 @@ import type { BchNetwork } from "./network";
 export type Route =
   | { name: "home" }
   | { name: "dev" }
+  | { name: "identity" }
   | { name: "pay"; handle: string }
   | { name: "tx"; txid: string }
   | { name: "security" }
@@ -20,6 +21,7 @@ export function matchRoute(pathname: string): Route {
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/") return { name: "home" };
   if (path === "/dev") return { name: "dev" };
+  if (path === "/identity") return { name: "identity" };
   if (path === "/security") return { name: "security" };
   if (path === "/auth") return { name: "auth" };
   const tx = /^\/tx\/([0-9a-fA-F]{64})$/.exec(path);

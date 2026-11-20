@@ -7,6 +7,7 @@ import { navigate, useRoute } from "./lib/router";
 import { DevHome } from "./routes/DevHome";
 import { AuthPage } from "./routes/AuthPage";
 import { HomePage } from "./routes/HomePage";
+import { IdentityPage } from "./routes/IdentityPage";
 import { PayPage } from "./routes/PayPage";
 import { SecurityPage } from "./routes/SecurityPage";
 import { TxPage } from "./routes/TxPage";
@@ -52,6 +53,9 @@ export default function App() {
         </div>
       </header>
       <nav className="nav" aria-label="Pages">
+        <a href="/identity" onClick={link("/identity")} aria-current={route.name === "identity" ? "page" : undefined}>
+          Get paid by name
+        </a>
         <a href="/security" onClick={link("/security")} aria-current={route.name === "security" ? "page" : undefined}>
           Try the attack
         </a>
@@ -64,6 +68,7 @@ export default function App() {
 
       {route.name === "home" && <HomePage />}
       {route.name === "dev" && <DevHome wallet={wallet} network={network} />}
+      {route.name === "identity" && <IdentityPage key={network} wallet={wallet} network={network} />}
       {route.name === "pay" && (
         <PayPage key={`${route.handle}|${network}`} handle={route.handle} search={search} wallet={wallet} network={network} />
       )}
