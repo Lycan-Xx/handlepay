@@ -8,12 +8,14 @@
  * always the one the resolver returned, never anything from the URL.
  */
 import { useEffect, useMemo, useState } from "react";
+import { Journey } from "../components/Journey";
 import { PayPanel } from "../components/PayPanel";
 import { VerifyCard } from "../components/VerifyCard";
 import type { Wallet } from "../hooks/useWallet";
 import type { BchNetwork } from "../lib/network";
 import { parseHandle } from "../lib/nostr";
 import { parsePayParams } from "../lib/paylink";
+import { navigate } from "../lib/router";
 import { getPin, pinResolution } from "../lib/pins";
 import { liveDeps, paymentGate, resolveHandle, type Resolution } from "../lib/resolve";
 
@@ -25,6 +27,8 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
   const [attempt, setAttempt] = useState(0);
   /** The payer accepted a Claimed or Changed result. */
   const [accepted, setAccepted] = useState(false);
+  /** The payment has gone out and the receipt is showing. */
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     // App remounts this page per handle and network, so state starts fresh here.
@@ -53,8 +57,24 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
     setAccepted(true);
   };
 
+  // Name was step 1 on /pay; here we are on Check until the name is cleared to pay, then Pay, then Receipt.
+  const stage = sent ? 3 : canPay && resolution?.address ? 2 : 1;
+  const hint = sent
+    ? "Your payment is on its way. This page follows it until it confirms."
+    : stage === 2
+      ? "The name checked out. Enter the amount and approve in your wallet."
+      : !resolution
+        ? error
+          ? "We couldn't finish the check."
+          : "Checking the name. Nothing is sent until you approve in your wallet."
+        : gate === "blocked"
+          ? "This name can't be paid. Check the spelling, or ask them for the right name."
+          : "Read the result, then decide whether to go on.";
+
   return (
     <>
+      <Journey label="Pay someone" steps={["Name", "Check", "Pay", "Receipt"]} current={stage} hint={hint} />
+
       <VerifyCard
         handle={handle}
         network={network}
@@ -105,7 +125,24 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
           handle={resolution.handle?.full ?? handle}
           address={resolution.address}
           params={params}
+          onSent={() => setSent(true)}
         />
+      )}
+
+      {!sent && resolution && (
+        <p className="muted small">
+          Why can you trust this check?{" "}
+          <a
+            href="/security"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate(`/security?network=${network}`);
+            }}
+          >
+            See how a fake name gets caught
+          </a>
+          .
+        </p>
       )}
     </>
   );

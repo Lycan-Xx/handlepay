@@ -23,8 +23,10 @@ export function PayPanel(props: {
   handle: string;
   address: string;
   params: PayParams;
+  /** Called once a payment has gone out, so the page can move its step strip to Receipt. */
+  onSent?: () => void;
 }) {
-  const { wallet, network, handle, address, params } = props;
+  const { wallet, network, handle, address, params, onSent } = props;
   const { wc, connected, restoring, connect, receiveAddress, changeAddress, coins, balance, scanned, loading } = wallet;
 
   const amountFixed = params.amountUsd !== null;
@@ -118,6 +120,7 @@ export function PayPanel(props: {
         broadcast: { status: broadcast.status, detail: broadcast.detail },
       });
       setTimeout(wallet.refresh, 3_000);
+      onSent?.();
     } catch (e) {
       setError(paymentErrorMessage(e, controller.signal.aborted, network));
     } finally {
