@@ -122,7 +122,7 @@ The first run with real money, on the live site `https://handlepay.lycanforge.co
 - **Issue: Paytaca said "Network Error" and nothing was sent.**
   - **Cause:** Paytaca's server `watchtower.cash` was answering 502 Bad Gateway. Paytaca's WizardConnect code (read on GitHub) signs, broadcasts through that server, and when the call throws it reports only the error and discards the signed transaction.
   - **Check:** Sani's address had no new transaction, and Paytaca's balance was untouched.
-  - **Fix `7141c20`:** sign requests now say `broadcast: false`. The wallet only signs, and HandlePay sends the transaction through its own Fulcrum server on the page's network. This also removes the chipnet "missing-inputs" errors, which came from wallets broadcasting to mainnet.
+  - **Fix `7141c20`:** sign requests now say `broadcast: false`. The wallet only signs, and HandlePay sends the transaction through a public Fulcrum server on the page's network. This also removes the chipnet "missing-inputs" errors, which came from wallets broadcasting to mainnet.
 - **Payment:** `3e3b8d68…4b15`, $0.25 from Paytaca to Sani, made while `watchtower.cash` was still returning 502. Checked on the mainnet server:
   - one input of 243,025 sats from Paytaca
   - 121,153 sats to Sani's verified address (about $0.25 at the time)

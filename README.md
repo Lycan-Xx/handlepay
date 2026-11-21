@@ -11,7 +11,7 @@ Track, Paytaca Decentralized Identity bounty, Build with XO bounty).
 
 ## Try it in a minute
 
-1. **Try the attack:** [/security](https://handlepay.lycanforge.com.ng/security). A fresh
+1. **Try the attack:** [/security](https://handlepay.lycanforge.com.ng/security?network=mainnet). A fresh
    attacker, Mallory, claims Sani's address and tampers with a pay link, live in your
    browser. Both attacks are caught, and no money moves.
 2. **Pay Sani $0.25:**
@@ -60,7 +60,7 @@ else console.log(r.status, r.reason); // claimed / changed / not_found, with the
 ## Wallets
 
 All signing goes through [WizardConnect](https://github.com/wizardconnect). The wallet only
-signs, and HandlePay broadcasts the signed transaction through its own Fulcrum server on the
+signs, and HandlePay broadcasts the signed transaction through a public Fulcrum server on the
 page's network.
 
 | Wallet | Mainnet pay | Chipnet pay | Proof transaction |
@@ -75,7 +75,8 @@ A dash means not tested yet.
 ## XO
 
 The Heartbeat Vault (savings that pass to an heir after the owner goes silent) is written as
-an XO template and was run end to end on chipnet. See [xo/README.md](xo/README.md).
+an XO template and was run end to end on chipnet; an in-app version is future work. See
+[xo/README.md](xo/README.md).
 
 ## Run it locally
 

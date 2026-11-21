@@ -64,6 +64,6 @@ used only with small test amounts.
 
 - **Unit tests** (`npm test`) cover every badge state, and threats 1–4 run against real
   signed events and real transaction bytes.
-- **The `/security` page** runs threats 1, 2 and 4 live against the real mainnet name, with
+- **The `/security` page** runs threats 1, 2 and 4 live against a real name (Sani on mainnet, lycan on chipnet), with
   a fresh attacker each time.
 - **Live runs** are recorded in [milestone-1-test-log.md](milestone-1-test-log.md).

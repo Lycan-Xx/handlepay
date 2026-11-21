@@ -46,10 +46,12 @@ OP_ENDIF
   `timeoutBlocks` as its sequence number (`"sequenceNumber": "$(<timeoutBlocks>)"`).
   So the network itself refuses the claim until the vault coin is old enough.
 
-**Compared with HandlePay's CashScript vault:** that version needs an extra input from the
-owner's own wallet, because WizardConnect wallets can't sign a contract input. XO signs the
-vault input itself, from the owner key in the template, so this version doesn't need that
-workaround.
+**Why XO, and not a contract inside the web app.** An in-app CashScript vault was the planned
+fallback, and it was never built. WizardConnect wallets can't sign a contract input, so an
+in-app version would need a workaround: an extra "key coin" input from the owner's wallet,
+spent alongside the vault. That path was never tested with real wallets. XO avoids it,
+because the engine signs the vault input itself from the owner key in the template. XO could
+express the time lock, so the fallback wasn't needed. An in-app vault is future work.
 
 ## The chipnet run
 
@@ -61,10 +63,22 @@ workaround.
 The waiting period was 6 blocks. Before it passed, chipnet refused every claim with
 `non-BIP68-final`.
 
-> **Chipnet now makes 1-minute blocks.** Chipnet runs the next network upgrade early, and
-> blocks there now arrive about every 60 seconds. A relative lock written in blocks keeps
-> its old meaning of 10 minutes per block, so "6 blocks" still means about an hour, which
-> is roughly 60 chipnet blocks. The vault coin was 27 blocks old and still locked.
+> **What we saw on chipnet, and what we can and can't say about it.**
+>
+> - **The lock is block-based.** The claim's input sequence number is `0x00000006`. In BIP68,
+>   bit 22 marks a time-based lock (512-second steps). That bit is clear here, so this is a
+>   block-based lock of 6.
+> - **Chipnet makes about one block a minute.** We measured 58.8 seconds on average over 100
+>   blocks on 20 Nov. Chipnet runs the next network upgrade early, and faster blocks are part
+>   of it.
+> - **The claim was refused at 27 blocks.** Under classic BIP68 rules, a block-based 6
+>   unlocks once the coin is 6 blocks deep. Our claim was refused with `non-BIP68-final` when
+>   the vault coin was 27 blocks deep, and accepted about an hour after the vault was made.
+>
+> This fits old block counts being read on a 10-minute scale, so "6 blocks" keeps meaning
+> about an hour. blaze.xo.cash's inspector also talks about a "ten minute height" for time
+> locks. We didn't find the exact rule written in the upgrade proposal, so treat this as an
+> observation, not a specification.
 
 ## Run it yourself
 

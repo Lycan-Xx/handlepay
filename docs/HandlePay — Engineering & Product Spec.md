@@ -2,6 +2,13 @@
 
 Nov 18, 2026 · @root\_x
 
+> **This is the planning document, written on 18 Nov 2026 before most of the build.** It
+> records what we intended, and some of it was changed or not built. For what actually
+> exists, read the [README](../README.md), the protocol in [SPEC.md](SPEC.md), the
+> [threat model](THREAT-MODEL.md) and the [live test log](milestone-1-test-log.md).
+> In particular, the in-app CashScript vault described below was never built. The
+> Heartbeat Vault runs as an XO template on chipnet instead ([xo/](../xo/README.md)).
+
 ## Summary and philosophy
 
 HandlePay lets anyone send Bitcoin Cash to a verified name like `sani@lycanforge.com.ng` instead of a 42-character address, and lets an owner leave BCH to a verified name that unlocks only if they go silent. A name shows **Verified** only when both its Nostr key and its BCH address have proven control, so a scammer who copies someone's address into their own profile is caught.
@@ -244,7 +251,7 @@ Contract inputs (vault) carry complete unlocking bytecode and are **left out** o
 
 ## Heartbeat Vault
 
-The vault is a 37-opcode CashScript contract with two paths: the owner can move the funds any time, and the heir can claim once the vault coin has gone unspent for a set number of blocks. Both paths are authorised by a sibling input the wallet signs, because WizardConnect cannot sign inside a contract input. It compiles with cashc 0.14.0 and passed six VM tests on Nov 18.
+The vault is a 37-opcode CashScript contract with two paths: the owner can move the funds any time, and the heir can claim once the vault coin has gone unspent for a set number of blocks. Both paths are authorised by a sibling input the wallet signs, because WizardConnect cannot sign inside a contract input. *(Correction, 21 Nov: this contract and its tests are not in the repository, so this plan can't show they ran. The in-app vault was never built; see the note at the top.)*
 
 ### Contract (`src/lib/vault/HeartbeatVault.cash`)
 
@@ -433,7 +440,7 @@ Every feature is tested at three levels — offline unit, chipnet with real wall
 | Test | Checks | Status |
 | --- | --- | --- |
 | Transaction build + relay serialisation | payment, OP\_RETURN, change at about 1 sat/byte; request survives `JSON.stringify` | passing (Day 1) |
-| Vault contract, VM evaluated | owner spends; Mallory rejected on both paths; heir accepted at sequence 6, rejected at 5; 3-input batch rejected | 6/6 passing (Nov 18) |
+| Vault contract, VM evaluated | owner spends; Mallory rejected on both paths; heir accepted at sequence 6, rejected at 5; 3-input batch rejected | not in the repo; vault not built in-app |
 | Proof transaction parser | finds `HPAY 01 <pubkey>`; rejects wrong prefix, version, length, pubkey | to write |
 | Binding verifier | Verified / Claimed / Not found / revoked / Changed from fixture events and transactions | to write |
 | Auth verifier | good signature passes; wrong challenge, stale `created_at`, other pubkey fail | to write |
@@ -536,7 +543,7 @@ Submit on DoraHacks by **Nov 22, 12:00 UTC** (13:00 Lagos), two hours before the
 
 | Date | Decision | Why |
 | --- | --- | --- |
-| Nov 18 | Vault authorised by a sibling input; no output rules; `activeInputIndex == 0`, `inputs.length == 2` | WizardConnect cannot sign inside contract inputs; signer's SIGHASH\_UTXOS signature commits to the whole transaction; tested 6/6 |
+| Nov 18 | Vault authorised by a sibling input; no output rules; `activeInputIndex == 0`, `inputs.length == 2` | WizardConnect cannot sign inside contract inputs; signer's SIGHASH\_UTXOS signature commits to the whole transaction (this design was not built; see the note at the top) |
 | Nov 18 | Create transaction sends a 1,000 sat key coin to the heir | The contract checks one exact heir address; wallets rotate addresses |
 | Nov 18 | Use `generateWcTransactionObject` + manual `inputPaths` + `sourceOutputToRelay` | CashScript 0.14.0 has no WizardConnect helper; relay JSON can't carry BigInt |
 | Nov 18 | CSV with `this.age`, never `tx.inputs[i].age` | Only `this.age` compiles to OP\_CHECKSEQUENCEVERIFY on the vault input |

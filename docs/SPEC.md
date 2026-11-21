@@ -192,7 +192,7 @@ older one. **To revoke:** publish the revoke event (section 4.2).
 The app never holds a key and never asks a wallet to broadcast:
 - The app builds the transaction, and the wallet only signs it (WizardConnect, with
   `broadcast: false`).
-- The app sends the signed transaction through its own Fulcrum server, on the page's
+- The app sends the signed transaction through a public Fulcrum server, on the page's
   network.
 - The receipt shows three honest states. **Submitted:** the txid is known. **Seen:** the
   server returns the transaction. **Confirmed:** it has 1 or more confirmations.
