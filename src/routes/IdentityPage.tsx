@@ -14,6 +14,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { decodeTransaction, hexToBin } from "@bitauth/libauth";
+import { CopyButton } from "../components/CopyButton";
 import { VerifyCard } from "../components/VerifyCard";
 import type { Wallet } from "../hooks/useWallet";
 import { buildBindingEvent, buildPaytoEvent, buildRevokeEvent, proofOpReturnChunks } from "../lib/binding";
@@ -281,6 +282,17 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
   };
 
   const nostrLine = handle && pubkey ? `"${handle.local}": "${pubkey}"` : "";
+  const nostrFile = handle && pubkey ? JSON.stringify({ names: { [handle.local]: pubkey } }, null, 2) : "";
+
+  // Progress is read from the same values the steps already use; nothing here changes the flow.
+  const stages: [string, boolean][] = [
+    ["Name & key", step1Done],
+    ["Wallet", step2Done],
+    ["Proof", !!proofHere],
+    ["Publish", published],
+  ];
+  const currentStage = stages.findIndex(([, done]) => !done);
+  const currentStep = !step1Done ? 1 : !step2Done ? 2 : 3;
 
   return (
     <>
@@ -289,12 +301,24 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
         <p className="muted">
           Three steps link your name to your wallet, so people can pay <strong>{handle?.full ?? "you@yourdomain.com"}</strong>{" "}
           instead of an address. You need a Nostr extension (nos2x or Alby), a domain you can add a file to, and a wallet
-          with a few cents of BCH on {network}.
+          with a few cents of BCH on {network === "mainnet" ? "mainnet (real money)" : "chipnet (practice coins)"}. Your keys
+          never leave your wallet or your Nostr extension.
         </p>
+        <div className="rail" aria-label="Progress">
+          {stages.map(([label, done], i) => (
+            <div key={label} style={{ display: "contents" }}>
+              {i > 0 && <div className={`rbar ${i <= currentStage || currentStage === -1 ? "ok" : ""}`} />}
+              <div className={`rnode ${done ? "ok" : i === currentStage ? "on" : ""}`}>
+                <span className="rb">{done ? "✓" : i + 1}</span>
+                <span className="rl">{label}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* Step 1 */}
-      <section className="card step">
+      <section className={`card step ${currentStep === 1 ? "current" : ""} ${step1Done ? "finished" : ""}`}>
         <h2>
           <span className="step-no">1</span> Your name and Nostr key {step1Done && <span className="done">✓</span>}
         </h2>
@@ -318,11 +342,14 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
         ) : (
           <>
             <p className="label">Your Nostr key</p>
-            <code className="addr">{pubkey}</code>
+            <div className="copyrow">
+              <code className="addr">{pubkey}</code>
+              <CopyButton text={pubkey} />
+            </div>
             {nameCheck.state === "checking" && <p className="muted">Checking {handle?.domain}…</p>}
             {nameCheck.state === "ok" && (
-              <p className="muted">
-                {handle?.domain} lists this key for {handle?.local}.
+              <p className="note green">
+                <strong>Found it.</strong> {handle?.domain} lists this key for {handle?.local}.
               </p>
             )}
             {(nameCheck.state === "missing" || nameCheck.state === "other_key") && (
@@ -330,13 +357,24 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
                 <p className="warn">
                   {nameCheck.state === "missing"
                     ? `${handle?.domain} doesn't list ${handle?.local} yet.`
-                    : `${handle?.domain} lists a different key for ${handle?.local} (${short(nameCheck.listed)}).`}{" "}
-                  Add this line to the "names" in <code>https://{handle?.domain}/.well-known/nostr.json</code>, then check
-                  again:
+                    : `${handle?.domain} lists a different key for ${handle?.local} (${short(nameCheck.listed)}). Replace it with the key above.`}{" "}
+                  Put this file on your domain, then check again. This is how the domain vouches that the name is yours.
                 </p>
-                <code className="addr">{nostrLine}</code>
+                <p className="label">Host this file at</p>
+                <div className="copyrow">
+                  <code className="addr">{`https://${handle?.domain}/.well-known/nostr.json`}</code>
+                  <CopyButton text={`https://${handle?.domain}/.well-known/nostr.json`} />
+                </div>
+                <p className="label">With exactly this inside</p>
+                <div className="copyrow">
+                  <pre className="addr">{nostrFile}</pre>
+                  <CopyButton text={nostrFile} />
+                </div>
                 <p className="muted small">
-                  The file must be served without redirects, as JSON, with the header Access-Control-Allow-Origin: *.
+                  File already there? Add just this line inside "names": <code>{nostrLine}</code>
+                </p>
+                <p className="muted small">
+                  Serve it as JSON, with no redirects, and with the header Access-Control-Allow-Origin: *.
                 </p>
               </>
             )}
@@ -351,7 +389,10 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
       </section>
 
       {/* Step 2 */}
-      <section className={`card step ${step1Done ? "" : "locked"}`} aria-disabled={!step1Done}>
+      <section
+        className={`card step ${step1Done ? "" : "locked"} ${currentStep === 2 ? "current" : ""} ${step2Done ? "finished" : ""}`}
+        aria-disabled={!step1Done}
+      >
         <h2>
           <span className="step-no">2</span> The wallet you'll be paid in {step2Done && <span className="done">✓</span>}
         </h2>
@@ -362,7 +403,11 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
             <button onClick={connect}>
               {wc.state === "connecting" || wc.state === "reconnecting" ? "Show QR" : "Connect wallet"}
             </button>
-            <p className="muted small">Scan with Cashonize, Paytaca or Selene. Make sure the wallet is on {network}.</p>
+            <p className="need">
+              <b>Use a wallet that works with WizardConnect:</b> Cashonize, Paytaca or Selene. Scan the code with it, and set
+              it to {network === "mainnet" ? "mainnet (real money)" : "chipnet (practice coins)"}. Your wallet only signs; it
+              never hands over its keys.
+            </p>
           </>
         ) : (
           <>
@@ -399,7 +444,10 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
       </section>
 
       {/* Step 3 */}
-      <section className={`card step ${step2Done ? "" : "locked"}`} aria-disabled={!step2Done}>
+      <section
+        className={`card step ${step2Done ? "" : "locked"} ${currentStep === 3 ? "current" : ""} ${published ? "finished" : ""}`}
+        aria-disabled={!step2Done}
+      >
         <h2>
           <span className="step-no">3</span> Prove it and publish {published && <span className="done">✓</span>}
         </h2>
@@ -451,6 +499,16 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
       </section>
 
       {error && <p className="err">{error}</p>}
+
+      <details className="card how">
+        <summary>Why is each step needed?</summary>
+        <p className="muted">
+          A name is only trusted when two proofs point at each other. <strong>Step 1</strong> makes your domain vouch for
+          your Nostr key. <strong>Step 2</strong> picks the address people will pay. <strong>Step 3</strong> sends a tiny
+          payment from that address with your key in its note, which only the address's owner can do, and then publishes
+          the signed claim. Anyone can name an address; only its owner can spend from it.
+        </p>
+      </details>
 
       {published && handle && (
         <>
