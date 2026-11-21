@@ -18,6 +18,8 @@ export function HomePage() {
   };
 
   const demoPay = payPath(DEMO_PAYEE.handle, { amount: DEMO_PAYEE.amountUsd, network: DEMO_PAYEE.network });
+  // Open the attack on the same network as the demo payment, so it attacks the same name.
+  const demoAttack = `/security?network=${DEMO_PAYEE.network}`;
 
   return (
     <>
@@ -65,7 +67,7 @@ export function HomePage() {
       <section className="card strip">
         <h2>Try it in a minute</h2>
         <div className="strip-actions">
-          <a className="button ghost" href="/security" onClick={go("/security")}>
+          <a className="button ghost" href={demoAttack} onClick={go(demoAttack)}>
             Try the attack
           </a>
           <a className="button" href={demoPay} onClick={go(demoPay)}>
