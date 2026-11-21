@@ -22,8 +22,12 @@ describe("matchRoute", () => {
 
   it("does not match deeper pay paths or unknown pages", () => {
     expect(matchRoute("/pay/a@b.c/extra").name).toBe("not_found");
-    expect(matchRoute("/pay/").name).toBe("not_found");
     expect(matchRoute("/nope").name).toBe("not_found");
+  });
+
+  it("sends a bare /pay (with or without a trailing slash) to the start page, not a payment", () => {
+    expect(matchRoute("/pay").name).toBe("pay_start");
+    expect(matchRoute("/pay/").name).toBe("pay_start");
   });
 
   it("treats a malformed escape as not found instead of throwing", () => {

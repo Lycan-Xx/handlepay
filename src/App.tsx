@@ -11,6 +11,7 @@ import { AuthPage } from "./routes/AuthPage";
 import { HomePage } from "./routes/HomePage";
 import { IdentityPage } from "./routes/IdentityPage";
 import { PayPage } from "./routes/PayPage";
+import { PayStartPage } from "./routes/PayStartPage";
 import { SecurityPage } from "./routes/SecurityPage";
 import { TxPage } from "./routes/TxPage";
 import "./App.css";
@@ -60,14 +61,14 @@ export default function App() {
         </div>
       </header>
       <nav className="nav" aria-label="Pages">
+        <a href="/pay" onClick={link("/pay")} aria-current={route.name === "pay" || route.name === "pay_start" ? "page" : undefined}>
+          Pay
+        </a>
         <a href="/identity" onClick={link("/identity")} aria-current={route.name === "identity" ? "page" : undefined}>
-          Get paid by name
+          Get paid
         </a>
         <a href="/security" onClick={link("/security")} aria-current={route.name === "security" ? "page" : undefined}>
-          Try the attack
-        </a>
-        <a href="/auth" onClick={link("/auth")} aria-current={route.name === "auth" ? "page" : undefined}>
-          Sign in
+          Why it's safe
         </a>
       </nav>
 
@@ -76,6 +77,7 @@ export default function App() {
       {route.name === "home" && <HomePage />}
       {route.name === "dev" && <DevHome wallet={wallet} network={network} />}
       {route.name === "identity" && <IdentityPage key={network} wallet={wallet} network={network} />}
+      {route.name === "pay_start" && <PayStartPage />}
       {route.name === "pay" && (
         <PayPage key={`${route.handle}|${network}`} handle={route.handle} search={search} wallet={wallet} network={network} />
       )}
@@ -94,6 +96,18 @@ export default function App() {
             </a>
           </p>
         </section>
+      )}
+
+      {route.name !== "home" && route.name !== "dev" && (
+        <footer className="foot muted small">
+          <a href="/" onClick={goHome}>
+            Home
+          </a>
+          {" · "}
+          <a href="/auth" onClick={link("/auth")}>
+            Sign in with your name
+          </a>
+        </footer>
       )}
 
       <WalletQR wallet={wallet} />
