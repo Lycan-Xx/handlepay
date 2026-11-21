@@ -11,9 +11,10 @@ export function useNetwork(): [BchNetwork, (next: BchNetwork) => void] {
     if (fromLink === "chipnet" || fromLink === "mainnet") return fromLink;
     try {
       const stored = localStorage.getItem(NETWORK_KEY);
-      return stored === "mainnet" ? "mainnet" : "chipnet";
+      // First visit: real money, so a judge's pay link and the demo name work with no setup. Practice coins stay one tap away.
+      return stored === "chipnet" ? "chipnet" : "mainnet";
     } catch {
-      return "chipnet";
+      return "mainnet";
     }
   });
   const choose = (next: BchNetwork) => {

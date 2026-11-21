@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { Banner } from "./components/Banner";
+import { NetworkPicker } from "./components/NetworkPicker";
 import { WalletQR } from "./components/WalletQR";
 import { useNetwork } from "./hooks/useNetwork";
+import { useTheme } from "./hooks/useTheme";
 import { useWallet } from "./hooks/useWallet";
 import { navigate, useRoute } from "./lib/router";
 import { DevHome } from "./routes/DevHome";
@@ -16,6 +18,7 @@ import "./App.css";
 export default function App() {
   const [network, setNetwork] = useNetwork();
   const wallet = useWallet(network);
+  const theme = useTheme();
   const { route, search } = useRoute();
 
   // A link can name its network (?network=mainnet), so a pay link to a mainnet name works from a chipnet browser.
@@ -44,12 +47,16 @@ export default function App() {
             HandlePay
           </a>
         </h1>
-        <div className="net" role="group" aria-label="Network">
-          {(["chipnet", "mainnet"] as const).map((n) => (
-            <button key={n} className={n === network ? "on" : ""} aria-pressed={n === network} onClick={() => setNetwork(n)}>
-              {n}
-            </button>
-          ))}
+        <div className="top-tools">
+          <NetworkPicker network={network} onChange={setNetwork} />
+          <button
+            type="button"
+            className="pill icon"
+            onClick={theme.toggle}
+            aria-label={theme.dark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            <span aria-hidden>{theme.dark ? "☀" : "◐"}</span>
+          </button>
         </div>
       </header>
       <nav className="nav" aria-label="Pages">
@@ -64,7 +71,7 @@ export default function App() {
         </a>
       </nav>
 
-      {network === "mainnet" && <p className="warn">Mainnet uses real money. Keep amounts tiny.</p>}
+      {network === "mainnet" && <p className="warn mainnet">Real money: payments here are final. Keep amounts tiny while testing.</p>}
 
       {route.name === "home" && <HomePage />}
       {route.name === "dev" && <DevHome wallet={wallet} network={network} />}
