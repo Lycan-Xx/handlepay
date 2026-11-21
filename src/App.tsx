@@ -60,7 +60,7 @@ export default function App() {
           Try the attack
         </a>
         <a href="/auth" onClick={link("/auth")} aria-current={route.name === "auth" ? "page" : undefined}>
-          Sign in with a name
+          Sign in
         </a>
       </nav>
 
