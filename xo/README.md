@@ -4,8 +4,9 @@ HandlePay's Heartbeat Vault, rewritten as an [XO](https://xo.cash) template and 
 chipnet with the XO engine.
 
 The vault holds money that the **owner** can spend at any time. It passes to an **heir**
-only after the owner has been silent for a set waiting period. Each time the owner checks
-in, the clock starts again.
+only after the owner has been silent for a set waiting period. The owner can also take the
+money back at any time. (A "check in" action that restarts the clock is in the template, but
+it doesn't run yet; see [Heartbeat](#heartbeat-why-it-doesnt-run-yet).)
 
 ## What's here
 
@@ -13,8 +14,11 @@ in, the clock starts again.
 |---|---|
 | [`heartbeat-vault.template.json`](heartbeat-vault.template.json) | The XO template: roles, actions, transactions and scripts |
 | [`vault.mjs`](vault.mjs) | Runs the template on chipnet as two separate XO accounts, owner and heir |
-| [`invitations/create-vault.json`](invitations/create-vault.json) | The executed invitation that created and funded the vault |
-| [`invitations/claim.json`](invitations/claim.json) | The executed invitation for the heir's claim |
+| [`invitations/create-vault.json`](invitations/create-vault.json) | Vault 1: the executed invitation that created and funded it |
+| [`invitations/claim.json`](invitations/claim.json) | Vault 1: the heir's claim after the waiting period |
+| [`invitations/create-vault-2.json`](invitations/create-vault-2.json) | Vault 2: created and funded |
+| [`invitations/reclaim-vault-2.json`](invitations/reclaim-vault-2.json) | Vault 2: the owner takes it back, with no wait |
+| [`invitations/create-vault-3.json`](invitations/create-vault-3.json) | Vault 3: created and funded, and left unspent so the heir's claim can be shown during judging |
 | [`screenshots/`](screenshots/) | Both invitations and transactions opened in blaze.xo.cash |
 
 ## The template
@@ -26,7 +30,7 @@ in, the clock starts again.
 | Action | Who | What it does |
 |---|---|---|
 | `createVault` | owner and heir | Each makes a key. The owner sets the waiting period and the amount, then pays in. |
-| `heartbeat` | owner | Moves the vault back into itself, which restarts the waiting period. |
+| `heartbeat` | owner | Moves the vault back into itself, which restarts the waiting period. **Doesn't run yet**; see below. |
 | `reclaim` | owner | Spends the vault to any address, with no waiting. |
 | `claim` | heir | Spends the vault after the owner has been silent for the whole waiting period. |
 
@@ -59,6 +63,12 @@ express the time lock, so the fallback wasn't needed. An in-app vault is future 
 |---|---|---|---|
 | Owner and heir create the vault, and the owner funds it with 20,000 sats | `4bf7d344ab7e2aa2fa1ebee490e4e6d7` | [`bb11895f…d488`](https://chipnet.imaginary.cash/tx/bb11895f0e873eb1f0bbe8ca24842a19d1e86c2436ff47bd9ac1ae269006d488) | 2026-11-20 20:41 |
 | The heir claims 19,500 sats after the waiting period | `4f94d2158865393431d21f5bfcd1c551` | [`5706b227…e1e5`](https://chipnet.imaginary.cash/tx/5706b227f1911c70cfa24f01aaffbf36a727aaccc43e8f8279045edc0233e1e5) | 2026-11-20 22:27 |
+| Vault 2: created and funded with 20,000 sats | `d4e70b5028114a6ad22898a930f26e07` | [`ed18527a…bf6f`](https://chipnet.imaginary.cash/tx/ed18527a3299cd89c7bb6b6bd726a51b6646ad77fda6371a2fdd82da335ebf6f) | 2026-11-21 |
+| Vault 2: the owner takes 19,500 sats back right away (`reclaim`) | `3e02ae14639819a661ccca85907d2380` | [`4893837c…fc98`](https://chipnet.imaginary.cash/tx/4893837cf64ae423d74cb991b0949b0684c51fbd7aab4f122ac89e32bee3fc98) | 2026-11-21 |
+| Vault 3: created and funded with 20,000 sats, **left unspent** | `77ab2c1043193db8acd2368edd49a8c3` | [`61b731ae…7b97`](https://chipnet.imaginary.cash/tx/61b731ae65613faa177c62c77d62644ffd02ea715e78785eb1faf236ee577b97) | 2026-11-21 |
+
+So all three spending paths that work have run on chipnet: the heir's claim after the wait,
+the owner's reclaim with no wait, and a new vault that stays open.
 
 The waiting period was 6 blocks. Before it passed, chipnet refused every claim with
 `non-BIP68-final`.
@@ -79,6 +89,25 @@ The waiting period was 6 blocks. Before it passed, chipnet refused every claim w
 > about an hour. blaze.xo.cash's inspector also talks about a "ten minute height" for time
 > locks. We didn't find the exact rule written in the upgrade proposal, so treat this as an
 > observation, not a specification.
+
+## Heartbeat: why it doesn't run yet
+
+The owner's check-in failed with:
+
+```
+LockingScriptSecretsNotFoundError: Secrets ["ownerKey"] not found in the invitation for locking
+script "vaultLockingScript" role "owner" … expected secrets this account generated for the invitation
+```
+
+A check-in has to lock the money into a **new** vault output. The engine builds that output's
+script from keys made **for that invitation**, but the heartbeat invitation has only the owner
+in it, so there is no owner key made for it and no heir key at all. Claim and reclaim work,
+because they pay out to a plain address and never rebuild the vault.
+
+Making heartbeat work means redesigning the action. One option is to have the heir join the
+check-in, like `createVault`, which defeats the point of a one-person heartbeat. Another is a
+template whose new output reuses the keys from the old one. We left that for after the
+hackathon, rather than change a working template the night before the deadline.
 
 ## Run it yourself
 
@@ -131,15 +160,19 @@ npm install
    node vault.mjs heir claim
    ```
 
-   Optionally, before the claim, the owner can check in, which restarts the hour:
+   Or, instead of the claim, the owner takes the money back at any time, with no wait:
 
    ```bash
-   node vault.mjs owner heartbeat
+   node vault.mjs owner reclaim
    ```
 
 The two parties pass the invitation to each other as files in `.data/invitations/`, in
 XO's own JSON format (`serializeInvitation` from `@xo-cash/utils`). Two people on two
 machines would do the same thing by sending each other the file.
+
+If `owner fund` broadcasts but then stops with an error before saving the file (it happened
+once, see below), run `node vault.mjs owner export` to write out the owner's stored copy,
+then `heir sync`.
 
 To build a spend and print it without broadcasting, put `DRY=1` in front, for example
 `DRY=1 node vault.mjs heir claim`.
@@ -164,6 +197,10 @@ To build a spend and print it without broadcasting, put `DRY=1` in front, for ex
   SQLite storage in `@xo-cash/state` 0.0.5 isn't finished yet.
 - **One account per process.** Only one engine can run in a process, because the network
   connection is shared. That's why each command runs as one party.
+- **An error after the broadcast.** Funding vault 3 broadcast correctly, then threw
+  `UnspentOutputNotFoundInStoreError` while the engine updated its records: a coin it had
+  just spent was already gone from its store. Check the chain before retrying, so you don't
+  pay twice.
 - **Failed spends are cleaned up.** If a spend fails, `vault.mjs` archives its invitation,
   which frees the vault coin for the next try. The engine otherwise keeps the coin
   reserved for the failed invitation.

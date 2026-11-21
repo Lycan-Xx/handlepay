@@ -10,8 +10,11 @@
  *   node vault.mjs heir join                 heir joins it and adds their key      -> create.json
  *   node vault.mjs owner fund                owner adds the vault output, pays in, signs, broadcasts
  *   node vault.mjs heir sync                 heir stores the executed invitation, so it sees the vault
+ *   node vault.mjs owner export              re-save the owner's stored create invitation (if fund
+ *                                            broadcast but then failed before saving it)
  *   node vault.mjs <owner|heir> vaults       vault coins this party can see, and how old they are
  *   node vault.mjs owner heartbeat           owner moves the vault back into itself (restarts the clock)
+ *   node vault.mjs owner reclaim             owner takes the money out to their own wallet, with no wait
  *   node vault.mjs heir claim                heir takes the vault, once it is <blocks> old
  *
  *   DRY=1 node vault.mjs heir claim         build and print a spend without broadcasting it
@@ -146,6 +149,17 @@ async function fund(account) {
   writeInvitation("create", result.storedInvitation);
 }
 
+/**
+ * Re-save this account's stored copy of the create invitation. The engine can broadcast and
+ * then throw while updating its own records, before `fund` saves the file. The stored copy
+ * still has the result, so this writes it out for the other party to sync.
+ */
+async function exportCreate({ engine }) {
+  const stored = await engine.getInvitation(idOf(readInvitation("create")));
+  if (!stored) throw new Error("This account has no stored copy of the create invitation.");
+  writeInvitation("create", stored);
+}
+
 async function sync(account) {
   const invitation = await account.engine.updateInvitation(readInvitation("create"));
   log(`${account.who} stored`, idOf(invitation));
@@ -240,8 +254,12 @@ async function main() {
       join: () => join(account),
       fund: () => fund(account),
       sync: () => sync(account),
+      export: () => exportCreate(account),
       vaults: () => vaults(account),
       heartbeat: () => spend(account, "heartbeat", "renewedVaultOutput", "owner"),
+      // The owner takes the money out, with no wait, to a fresh address in the owner's own wallet.
+      reclaim: async () =>
+        spend(account, "reclaim", "payoutOutput", "owner", await account.engine.generateLockingBytecodeFromDefaultPolicy("receive")),
       claim: async () =>
         spend(account, "claim", "payoutOutput", "heir", await account.engine.generateLockingBytecodeFromDefaultPolicy("receive")),
     }[command];
