@@ -17,6 +17,7 @@ import {
   type FakeClaimResult,
   type TamperedLink,
 } from "../lib/attack";
+import { useTone } from "../hooks/useTone";
 import type { BchNetwork } from "../lib/network";
 import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
 import { navigate } from "../lib/router";
@@ -36,6 +37,9 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
   const [attempt, setAttempt] = useState(0);
   const [run, setRun] = useState<Run | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attemptView, setAttemptView] = useState<"noProof" | "replay">("noProof");
+  // Green while checking the real name, amber once Mallory's attempts are on screen.
+  useTone(run?.fake ? "amber" : "ok");
 
   useEffect(() => {
     let cancelled = false;
@@ -82,6 +86,35 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
           browser and runs her two best tricks through the same checks the pay page uses, against the real {network}{" "}
           chain. Nothing is published and no money moves.
         </p>
+        <details className="how">
+        <summary>Why it can't win: the three links</summary>
+        <div className="chain">
+          <div className="cnode">
+            <span className="n">1</span>
+            <div>
+              <h4>Name → Nostr key</h4>
+              <p>The domain publishes a file saying which key owns the name.</p>
+            </div>
+          </div>
+          <div className="cnode">
+            <span className="n">2</span>
+            <div>
+              <h4>Nostr key → address</h4>
+              <p>A message signed by that key names the address to pay.</p>
+            </div>
+          </div>
+          <div className="cnode gate">
+            <span className="n">3</span>
+            <div>
+              <h4>Address → Nostr key</h4>
+              <p>
+                A real payment <strong>spent from that address</strong> names the key back. Only the owner can make it, so
+                this is the link a copycat can't forge.
+              </p>
+            </div>
+          </div>
+        </div>
+        </details>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -100,7 +133,7 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
       </section>
 
       <h3 className="section">The real name</h3>
-      <VerifyCard handle={victimHandle} network={network} resolution={run?.victim ?? null} error={error} onRetry={() => rerun(victimHandle)} />
+      <VerifyCard handle={victimHandle} network={network} resolution={run?.victim ?? null} error={error} onRetry={() => rerun(victimHandle)} wash={false} />
 
       {run && run.victim.status !== "verified" && (
         <p className="warn">
@@ -120,15 +153,21 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
             BCH proof for it.
           </p>
 
-          <p className="label">Try 1: just claim it, with no proof</p>
-          <VerifyCard handle={MALLORY_HANDLE} network={network} resolution={run.fake.noProof} />
-
-          <p className="label">Try 2: reuse {victimName}'s real proof transaction</p>
-          <VerifyCard handle={MALLORY_HANDLE} network={network} resolution={run.fake.replay} />
-          <p className="muted small">
-            The proof really was paid from that address, but it names {victimName}'s Nostr key, not Mallory's, and she
-            can't make a new one without {victimName}'s coins.
-          </p>
+          <div className="net" role="group" aria-label="Mallory's try" style={{ marginTop: 14 }}>
+            <button className={attemptView === "noProof" ? "on" : ""} aria-pressed={attemptView === "noProof"} onClick={() => setAttemptView("noProof")}>
+              Claim with no proof
+            </button>
+            <button className={attemptView === "replay" ? "on" : ""} aria-pressed={attemptView === "replay"} onClick={() => setAttemptView("replay")}>
+              Reuse {victimName}'s proof
+            </button>
+          </div>
+          <VerifyCard handle={MALLORY_HANDLE} network={network} resolution={attemptView === "noProof" ? run.fake.noProof : run.fake.replay} wash={false} />
+          {attemptView === "replay" && (
+            <p className="muted small">
+              The proof really was paid from that address, but it names {victimName}'s Nostr key, not Mallory's, and she
+              can't make a new one without {victimName}'s coins. Still caught.
+            </p>
+          )}
         </>
       )}
 
@@ -138,7 +177,10 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
           <p className="muted">
             She takes {victimName}'s pay link, adds her own address and raises the amount, then sends it round:
           </p>
-          <code className="addr">{run.link.href}</code>
+          <code className="addr">
+            {run.link.href.split("&to=")[0]}
+            <span className="strike">&to={run.link.href.split("&to=")[1]}</span>
+          </code>
           <dl className="facts">
             <dt>to=</dt>
             <dd>
