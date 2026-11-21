@@ -3,3 +3,4 @@ dist
 .env.local
 xo/.data*
 xo/FEEDBACK-NOTES.md
+docs/SLIDES-DRAFT.md
