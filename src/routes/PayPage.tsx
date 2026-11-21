@@ -68,7 +68,7 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
           ? "We couldn't finish the check."
           : "Checking the name. Nothing is sent until you approve in your wallet."
         : gate === "blocked"
-          ? "This name can't be paid. Check the spelling, or ask them for the right name."
+          ? "Nothing can be paid from this result. If the name looks right, try again, or ask them to check their setup."
           : "Read the result, then decide whether to go on.";
 
   return (
