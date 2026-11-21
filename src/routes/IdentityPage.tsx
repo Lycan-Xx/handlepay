@@ -15,6 +15,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { decodeTransaction, hexToBin } from "@bitauth/libauth";
 import { CopyButton } from "../components/CopyButton";
+import { Journey } from "../components/Journey";
 import { VerifyCard } from "../components/VerifyCard";
 import type { Wallet } from "../hooks/useWallet";
 import { buildBindingEvent, buildPaytoEvent, buildRevokeEvent, proofOpReturnChunks } from "../lib/binding";
@@ -30,7 +31,7 @@ import {
 } from "../lib/nostr";
 import { paymentErrorMessage } from "../lib/paylink";
 import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
-import { payPath } from "../lib/router";
+import { navigate, payPath } from "../lib/router";
 import { buildSignRequest, formatBch, selectCoins, sendBch } from "../lib/wallet";
 
 /** Enough for the proof's fee with room to spare; the coin comes back as change. */
@@ -299,23 +300,55 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
       <section className="card">
         <h2>Get paid by name</h2>
         <p className="muted">
-          Three steps link your name to your wallet, so people can pay <strong>{handle?.full ?? "you@yourdomain.com"}</strong>{" "}
-          instead of an address. You need a Nostr extension (nos2x or Alby), a domain you can add a file to, and a wallet
-          with a few cents of BCH on {network === "mainnet" ? "mainnet (real money)" : "chipnet (practice coins)"}. Your keys
-          never leave your wallet or your Nostr extension.
+          Link your name to your wallet, so people can pay <strong>{handle?.full ?? "you@yourdomain.com"}</strong> instead
+          of an address. Your keys never leave your wallet or your Nostr extension.
         </p>
-        <div className="rail" aria-label="Progress">
-          {stages.map(([label, done], i) => (
-            <div key={label} style={{ display: "contents" }}>
-              {i > 0 && <div className={`rbar ${i <= currentStage || currentStage === -1 ? "ok" : ""}`} />}
-              <div className={`rnode ${done ? "ok" : i === currentStage ? "on" : ""}`}>
-                <span className="rb">{done ? "✓" : i + 1}</span>
-                <span className="rl">{label}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        {!step1Done && (
+          <div className="need">
+            <strong>Before you start, have these ready:</strong>
+            <ul className="needlist">
+              <li>
+                <strong>A domain</strong> you can add one small file to (we show you the file).
+              </li>
+              <li>
+                <strong>A Nostr extension</strong> in your browser, like nos2x or Alby, for the name's key.
+              </li>
+              <li>
+                <strong>A BCH wallet</strong> (Paytaca, Cashonize or Selene) with a few cents on{" "}
+                {network === "mainnet" ? "mainnet (real money)" : "chipnet (practice coins)"}.
+              </li>
+            </ul>
+            <p className="small">
+              Not ready? Switch to practice coins with the network button at the top, or{" "}
+              <a
+                href="/security"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(`/security?network=${network}`);
+                }}
+              >
+                see how a name is proven first
+              </a>
+              .
+            </p>
+          </div>
+        )}
       </section>
+
+      <Journey
+        label="Get paid by name"
+        steps={stages.map(([label]) => label)}
+        current={currentStage === -1 ? stages.length : currentStage}
+        hint={
+          published
+            ? "Your name is live. Share the pay link below."
+            : currentStep === 1
+              ? "Choose your name and connect your Nostr key, then put the file on your domain."
+              : currentStep === 2
+                ? "Connect the wallet that should receive the money."
+                : "Send the small proof payment, then publish. This is what makes the name trustworthy."
+        }
+      />
 
       {/* Step 1 */}
       <section className={`card step ${currentStep === 1 ? "current" : ""} ${step1Done ? "finished" : ""}`}>
@@ -525,6 +558,18 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
               </button>
             </div>
             <p className="muted small">Add ?amount=5 to ask for $5, or &memo=Invoice 7 for a note.</p>
+          </section>
+
+          <section className="card">
+            <h2>What next?</h2>
+            <p className="muted small">
+              Share the link above to be paid. You can also use the same name to log in to sites with no password.
+            </p>
+            <div className="strip-actions">
+              <button className="ghost" onClick={() => navigate("/auth")}>
+                Sign in with your name
+              </button>
+            </div>
           </section>
 
           <section className="card">
