@@ -1,0 +1,267 @@
+{
+  "$schema": "https://libauth.org/schemas/wallet-template-v0.schema.json",
+  "name": "Heartbeat Vault",
+  "description": "Savings the owner can always spend, that pass to an heir only after the owner has been silent for a set number of blocks. Each spend by the owner resets the clock.",
+  "icon": "vault",
+  "version": "1",
+  "supported": ["BCH_2023_05", "BCH_2024_05", "BCH_2025_05", "BCH_2026_05"],
+  "resources": [
+    {
+      "name": "HandlePay",
+      "description": "The payments app this vault belongs to: pay people by name on Bitcoin Cash.",
+      "url": "https://handlepay.lycanforge.com.ng"
+    }
+  ],
+  "roles": {
+    "owner": {
+      "name": "Owner",
+      "description": "Puts money in the vault, and can take it out or check in at any time.",
+      "icon": "owner"
+    },
+    "heir": {
+      "name": "Heir",
+      "description": "Can take the money only after the owner has been silent for the whole waiting period.",
+      "icon": "heir"
+    }
+  },
+  "start": [
+    {
+      "action": "createVault",
+      "role": "owner",
+      "generate": ["ownerKey"]
+    }
+  ],
+  "actions": {
+    "createVault": {
+      "name": "Create vault",
+      "description": "The owner and the heir each make a key, and the owner locks money to both with a waiting period.",
+      "icon": "vault",
+      "roles": {
+        "owner": {
+          "name": "Fund vault",
+          "description": "Make the owner key, choose the waiting period and the amount, and pay it in.",
+          "icon": "owner",
+          "generate": ["ownerKey"],
+          "requirements": { "variables": ["timeoutBlocks", "vaultSatoshis"] }
+        },
+        "heir": {
+          "name": "Become heir",
+          "description": "Make the heir key so the vault can name you.",
+          "icon": "heir",
+          "generate": ["heirKey"]
+        }
+      },
+      "requirements": {
+        "participants": [
+          { "role": "owner", "slots": { "min": 1, "max": 1 } },
+          { "role": "heir", "slots": { "min": 1, "max": 1 } }
+        ]
+      },
+      "transaction": "createVaultTransaction"
+    },
+    "heartbeat": {
+      "name": "Check in",
+      "description": "The owner moves the vault back into itself, which restarts the waiting period.",
+      "icon": "heartbeat",
+      "roles": {
+        "owner": { "requirements": { "variables": ["vaultSatoshis"], "secrets": ["ownerKey"] } }
+      },
+      "requirements": {
+        "participants": [{ "role": "owner", "slots": { "min": 1, "max": 1 } }]
+      },
+      "conditions": ["$(OP_INPUTINDEX OP_UTXOVALUE <dustLimit> OP_GREATERTHAN)"],
+      "transaction": "heartbeatTransaction"
+    },
+    "reclaim": {
+      "name": "Take money out",
+      "description": "The owner spends the vault to any address, with no waiting.",
+      "icon": "send",
+      "roles": {
+        "owner": {
+          "requirements": { "variables": ["vaultSatoshis", "recipientLockingScript"], "secrets": ["ownerKey"] }
+        }
+      },
+      "requirements": {
+        "participants": [{ "role": "owner", "slots": { "min": 1, "max": 1 } }]
+      },
+      "conditions": ["$(OP_INPUTINDEX OP_UTXOVALUE <dustLimit> OP_GREATERTHAN)"],
+      "transaction": "reclaimTransaction"
+    },
+    "claim": {
+      "name": "Claim inheritance",
+      "description": "The heir takes the vault after the owner has been silent for the whole waiting period.",
+      "icon": "heir",
+      "roles": {
+        "heir": {
+          "requirements": { "variables": ["vaultSatoshis", "recipientLockingScript"], "secrets": ["heirKey"] }
+        }
+      },
+      "requirements": {
+        "participants": [{ "role": "heir", "slots": { "min": 1, "max": 1 } }]
+      },
+      "conditions": ["$(OP_INPUTINDEX OP_UTXOVALUE <dustLimit> OP_GREATERTHAN)"],
+      "transaction": "claimTransaction"
+    }
+  },
+  "transactions": {
+    "createVaultTransaction": {
+      "name": "Vault created",
+      "description": "$(<vaultSatoshis>) satoshis locked for the owner, passing to the heir after $(<timeoutBlocks>) silent blocks.",
+      "icon": "vault",
+      "inputs": [],
+      "outputs": [{ "output": "vaultOutput" }],
+      "version": 2,
+      "locktime": 0,
+      "composable": true
+    },
+    "heartbeatTransaction": {
+      "name": "Owner checked in",
+      "description": "The owner moved the vault back into itself, so the waiting period starts again.",
+      "icon": "heartbeat",
+      "inputs": [{ "input": "ownerInput", "inputIndex": 0 }],
+      "outputs": [{ "output": "renewedVaultOutput", "outputIndex": 0 }],
+      "version": 2,
+      "locktime": 0,
+      "composable": false
+    },
+    "reclaimTransaction": {
+      "name": "Owner took money out",
+      "description": "The owner spent the vault.",
+      "icon": "send",
+      "inputs": [{ "input": "ownerInput", "inputIndex": 0 }],
+      "outputs": [{ "output": "payoutOutput", "outputIndex": 0 }],
+      "version": 2,
+      "locktime": 0,
+      "composable": false
+    },
+    "claimTransaction": {
+      "name": "Heir claimed",
+      "description": "The heir claimed the vault after the waiting period.",
+      "icon": "heir",
+      "inputs": [{ "input": "heirInput", "inputIndex": 0 }],
+      "outputs": [{ "output": "payoutOutput", "outputIndex": 0 }],
+      "version": 2,
+      "locktime": 0,
+      "composable": false
+    }
+  },
+  "inputs": {
+    "ownerInput": {
+      "name": "Vault, spent by the owner",
+      "description": "The owner signs; no waiting is needed.",
+      "icon": "owner",
+      "valueSatoshis": "$(<vaultSatoshis>)",
+      "token": null,
+      "unlockingScript": "unlockAsOwner"
+    },
+    "heirInput": {
+      "name": "Vault, spent by the heir",
+      "description": "The heir signs, and the coin must have sat unspent for the whole waiting period.",
+      "icon": "heir",
+      "valueSatoshis": "$(<vaultSatoshis>)",
+      "token": null,
+      "sequenceNumber": "$(<timeoutBlocks>)",
+      "unlockingScript": "unlockAsHeir"
+    }
+  },
+  "outputs": {
+    "vaultOutput": {
+      "name": "Vault",
+      "description": "$(<vaultSatoshis>) satoshis held for the owner and heir.",
+      "icon": "vault",
+      "lockingScript": "vaultLockingScript",
+      "valueSatoshis": "$(<vaultSatoshis>)",
+      "token": null
+    },
+    "renewedVaultOutput": {
+      "name": "Vault",
+      "description": "The same vault, with the waiting period started again.",
+      "icon": "vault",
+      "lockingScript": "vaultLockingScript",
+      "valueSatoshis": "$(<vaultSatoshis> <minerFeeSatoshis> OP_SUB)",
+      "token": null
+    },
+    "payoutOutput": {
+      "name": "Payout",
+      "description": "The vault paid out, less the network fee.",
+      "icon": "send",
+      "lockingScript": "$(<recipientLockingScript>)",
+      "valueSatoshis": "$(<vaultSatoshis> <minerFeeSatoshis> OP_SUB)",
+      "token": null
+    }
+  },
+  "lockingScripts": {
+    "vaultLockingScript": {
+      "name": "Heartbeat vault",
+      "description": "Owner can spend any time; heir can spend after the waiting period.",
+      "icon": "vault",
+      "lockingType": "p2sh",
+      "lockingBytecode": "vaultRedeemBytecode",
+      "state": { "variables": ["timeoutBlocks"] },
+      "actions": [],
+      "roles": {
+        "owner": {
+          "state": { "secrets": ["ownerKey"] },
+          "actions": [
+            { "action": "heartbeat", "role": "owner", "secrets": [{ "ownerKey": null }] },
+            { "action": "reclaim", "role": "owner", "secrets": [{ "ownerKey": null }] }
+          ],
+          "balance": { "satoshis": true },
+          "selectable": false
+        },
+        "heir": {
+          "state": { "secrets": ["heirKey"] },
+          "actions": [{ "action": "claim", "role": "heir", "secrets": [{ "heirKey": null }] }],
+          "balance": { "satoshis": true },
+          "selectable": false
+        }
+      }
+    }
+  },
+  "scripts": {
+    "enforceWaitingPeriod": "<timeoutBlocks> OP_CHECKSEQUENCEVERIFY OP_DROP",
+    "vaultRedeemBytecode": "OP_IF <ownerKey.public_key> OP_CHECKSIG OP_ELSE enforceWaitingPeriod <heirKey.public_key> OP_CHECKSIG OP_ENDIF",
+    "unlockAsOwner": "<ownerKey.schnorr_signature.all_outputs> OP_1",
+    "unlockAsHeir": "<heirKey.schnorr_signature.all_outputs> OP_0"
+  },
+  "constants": {
+    "minerFeeSatoshis": {
+      "name": "Network fee",
+      "description": "Satoshis left for the miner when the vault is spent.",
+      "type": "satoshis",
+      "value": 500
+    },
+    "dustLimit": {
+      "name": "Dust limit",
+      "description": "Smallest vault worth spending.",
+      "type": "integer",
+      "value": 1000
+    }
+  },
+  "variables": {
+    "ownerKey": { "name": "Owner key", "description": "The owner's private key.", "type": "private_key" },
+    "heirKey": { "name": "Heir key", "description": "The heir's private key.", "type": "private_key" },
+    "timeoutBlocks": {
+      "name": "Waiting period (blocks)",
+      "description": "How many blocks the owner must be silent before the heir can claim. 6 is about an hour; 4,320 is about 30 days.",
+      "type": "integer"
+    },
+    "vaultSatoshis": {
+      "name": "Vault amount",
+      "description": "Satoshis in the vault coin.",
+      "type": "satoshis"
+    },
+    "recipientLockingScript": {
+      "name": "Pay to",
+      "description": "Where the money goes when the vault is spent.",
+      "type": "locking_script"
+    }
+  },
+  "icons": [
+    { "name": "vault", "hash": "0000000000000000000000" },
+    { "name": "owner", "hash": "0000000000000000000000" },
+    { "name": "heir", "hash": "0000000000000000000000" },
+    { "name": "heartbeat", "hash": "0000000000000000000000" },
+    { "name": "send", "hash": "0000000000000000000000" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "handlepay-xo",
+  "private": true,
+  "type": "module",
+  "description": "The Heartbeat Vault as an XO template, run on chipnet with the XO engine.",
+  "scripts": {
+    "vault": "node vault.mjs"
+  },
+  "dependencies": {
+    "@bitauth/libauth": "3.1.0-next.8",
+    "@xo-cash/engine": "0.1.1-next.18170561234",
+    "@xo-cash/state": "0.0.5",
+    "@xo-cash/templates": "0.0.12",
+    "@xo-cash/utils": "0.0.10"
+  }
+}
