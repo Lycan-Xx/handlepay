@@ -29,6 +29,7 @@ import {
   signWithExtension,
   signerPubkey,
 } from "../lib/nostr";
+import { diagnoseNip05, type Nip05Diagnosis } from "../lib/nip05diagnose";
 import { paymentErrorMessage } from "../lib/paylink";
 import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
 import { navigate, payPath } from "../lib/router";
@@ -114,6 +115,22 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
     // handle is derived from progress.name
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress.name, pubkey, lookups]);
+
+  // When the check fails, probe the same URL once more so the page can say why (advice only; it decides nothing).
+  const [diagnosis, setDiagnosis] = useState<Nip05Diagnosis | null>(null);
+  useEffect(() => {
+    setDiagnosis(null);
+    if (!handle || (nameCheck.state !== "missing" && nameCheck.state !== "error")) return;
+    let cancelled = false;
+    diagnoseNip05(handle)
+      .then((d) => !cancelled && setDiagnosis(d))
+      .catch(() => !cancelled && setDiagnosis(null));
+    return () => {
+      cancelled = true;
+    };
+    // handle is derived from progress.name
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nameCheck.state, progress.name, lookups]);
 
   const step1Done = nameCheck.state === "ok";
   const bindAddress = receiveAddress;
@@ -409,9 +426,49 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
                 <p className="muted small">
                   Serve it as JSON, with no redirects, and with the header Access-Control-Allow-Origin: *.
                 </p>
+                <details className="how">
+                  <summary>No domain? Host it free on GitHub Pages</summary>
+                  <ol className="small">
+                    <li>
+                      Make a free GitHub account. Create a <strong>public</strong> repository named{" "}
+                      <code>your-username.github.io</code>.
+                    </li>
+                    <li>
+                      In it, choose <strong>Add file → Create new file</strong>. For the file name type{" "}
+                      <code>.well-known/nostr.json</code> (typing the slash makes the folder) and paste the JSON above.
+                      Commit.
+                    </li>
+                    <li>
+                      Add a second, empty file named <code>.nojekyll</code> and commit it. Without it GitHub hides folders
+                      that start with a dot.
+                    </li>
+                    <li>
+                      In Settings → Pages, set the source to your main branch. Wait a minute, then open{" "}
+                      <code>https://your-username.github.io/.well-known/nostr.json</code> to see the file.
+                    </li>
+                    <li>
+                      Change your name above to <code>{handle?.local ?? "you"}@your-username.github.io</code> and check
+                      again. GitHub already sends the Access-Control-Allow-Origin header for you.
+                    </li>
+                  </ol>
+                  <p className="muted small">
+                    The name is still yours to control, but GitHub is the one hosting it, so a payer is trusting your
+                    GitHub account for the name.
+                  </p>
+                </details>
+                {diagnosis && diagnosis.problem !== "ok" && (
+                  <p className="warn">
+                    <strong>What we found:</strong> {diagnosis.message}
+                  </p>
+                )}
               </>
             )}
-            {nameCheck.state === "error" && <p className="err">{nameCheck.message}</p>}
+            {nameCheck.state === "error" && (
+              <>
+                <p className="err">{diagnosis && diagnosis.problem !== "ok" ? diagnosis.message : nameCheck.message}</p>
+                {!diagnosis && <p className="muted small">Working out what went wrong…</p>}
+              </>
+            )}
             {nameCheck.state !== "ok" && nameCheck.state !== "checking" && (
               <button className="ghost" onClick={() => setLookups((n) => n + 1)}>
                 Check again
