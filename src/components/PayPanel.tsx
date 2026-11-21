@@ -204,7 +204,11 @@ export function PayPanel(props: {
           <button onClick={connect}>
             {wc.state === "connecting" || wc.state === "reconnecting" ? "Show QR" : "Connect wallet to pay"}
           </button>
-          <p className="muted small">Scan with Cashonize, Paytaca or Selene. Make sure the wallet is on {network}.</p>
+          <p className="need">
+            <b>You'll need a Bitcoin Cash wallet</b> that works with WizardConnect: Paytaca, Cashonize or Selene. Scan the
+            code with it, and set it to {network === "mainnet" ? "mainnet (real money)" : "chipnet (practice coins)"}.
+            HandlePay never holds your money or keys.
+          </p>
           {wc.error && <p className="err">{wc.error}</p>}
         </>
       ) : (

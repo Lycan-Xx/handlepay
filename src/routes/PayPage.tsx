@@ -74,10 +74,11 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
       )}
 
       {gate === "confirm_unverified" && !accepted && (
-        <section className="card">
+        <section className="card gate amber">
           <p>
-            This address is only <strong>claimed</strong>. Nobody has proven that the person behind this name controls
-            it.
+            <strong>We don't recommend paying this name.</strong> The proof that is missing is the one a scammer can't
+            fake: a real payment sent from the address. If you know and trust the person another way, you can still go
+            ahead.
           </p>
           <button className="ghost" onClick={() => setAccepted(true)}>
             Pay anyway
@@ -86,10 +87,10 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
       )}
 
       {gate === "acknowledge_change" && !accepted && (
-        <section className="card">
+        <section className="card gate amber">
           <p>
-            This name pointed somewhere else last time. If you weren't expecting that, ask the person through another
-            channel before paying.
+            <strong>Check before you pay.</strong> This name pointed somewhere else last time. If you weren't expecting
+            that, ask the person through another channel first.
           </p>
           <button className="ghost" onClick={acknowledgeChange}>
             I've checked, use the new address

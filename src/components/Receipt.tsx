@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { getTransaction, type BchNetwork } from "../lib/network";
 import { paymentStage, receiptText, type PaymentStage, type Receipt as ReceiptData } from "../lib/paylink";
+import { navigate } from "../lib/router";
 import { formatBch } from "../lib/wallet";
 
 const POLL_MS = 5_000;
@@ -63,6 +64,9 @@ export function Receipt({ receipt, network }: { receipt: ReceiptData; network: B
 
   return (
     <section className="card receipt" aria-live="polite">
+      <div className="tick" aria-hidden>
+        ✓
+      </div>
       <h2>Payment sent</h2>
       <ol className="stages">
         {STEPS.map((s, i) => (
@@ -117,9 +121,21 @@ export function Receipt({ receipt, network }: { receipt: ReceiptData; network: B
         </dd>
       </dl>
 
-      <button className="ghost" onClick={copy}>
-        {copied ? "Copied" : "Copy receipt"}
-      </button>
+      <div className="strip-actions">
+        <a
+          className="button"
+          href={`/tx/${receipt.txid}?network=${network}`}
+          onClick={(e) => {
+            e.preventDefault();
+            navigate(`/tx/${receipt.txid}?network=${network}`);
+          }}
+        >
+          View transaction details
+        </a>
+        <button className="ghost" onClick={copy}>
+          {copied ? "Copied" : "Copy receipt"}
+        </button>
+      </div>
     </section>
   );
 }

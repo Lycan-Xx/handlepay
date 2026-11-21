@@ -1,9 +1,10 @@
 /**
- * The front page: what HandlePay does in one line, a name box, and the two
- * things a first-time visitor (or judge) should try.
+ * The front page: what HandlePay does in one line, the two things a first-time
+ * visitor (or judge) should try, and a box to check any name.
  */
 import { useState } from "react";
 import { DEMO_PAYEE } from "../config";
+import { useTone } from "../hooks/useTone";
 import { navigate, payPath } from "../lib/router";
 
 const LOOKS_LIKE_NAME = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -11,6 +12,7 @@ const LOOKS_LIKE_NAME = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function HomePage() {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  useTone("ok");
 
   const go = (href: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,6 +31,24 @@ export function HomePage() {
           Send Bitcoin Cash to a name like <strong>{DEMO_PAYEE.handle}</strong>. Before you pay, HandlePay checks that the
           name really owns the address, so a copied or swapped address gets caught.
         </p>
+      </section>
+
+      <section className="card strip">
+        <h2>Try it in a minute</h2>
+        <div className="strip-actions">
+          <a className="button ghost" href={demoAttack} onClick={go(demoAttack)}>
+            Try the attack
+          </a>
+          <a className="button" href={demoPay} onClick={go(demoPay)}>
+            Pay {DEMO_PAYEE.name} ${DEMO_PAYEE.amountUsd}
+          </a>
+        </div>
+        <p className="muted small">
+          {`The attack runs in your browser and moves no money. Paying ${DEMO_PAYEE.name} sends about $${DEMO_PAYEE.amountUsd} of ${DEMO_PAYEE.network === "mainnet" ? "real" : "practice"} BCH from your own wallet.`}
+        </p>
+      </section>
+
+      <section className="card">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -41,7 +61,7 @@ export function HomePage() {
           }}
         >
           <label>
-            Who are you paying?
+            Or pay any name
             <input
               value={name}
               onChange={(e) => {
@@ -62,20 +82,18 @@ export function HomePage() {
           )}
           <button type="submit">Check name</button>
         </form>
-      </section>
-
-      <section className="card strip">
-        <h2>Try it in a minute</h2>
-        <div className="strip-actions">
-          <a className="button ghost" href={demoAttack} onClick={go(demoAttack)}>
-            Try the attack
-          </a>
-          <a className="button" href={demoPay} onClick={go(demoPay)}>
-            Pay {DEMO_PAYEE.name} ${DEMO_PAYEE.amountUsd}
-          </a>
-        </div>
-        <p className="muted small">
-          {`The attack runs in your browser and moves no money. Paying ${DEMO_PAYEE.name} sends real BCH on ${DEMO_PAYEE.network}, about $${DEMO_PAYEE.amountUsd}, from your own wallet.`}
+        <p className="chips">
+          Try one:
+          <button
+            type="button"
+            className="chip"
+            onClick={() => {
+              setName(DEMO_PAYEE.handle);
+              setError(null);
+            }}
+          >
+            {DEMO_PAYEE.handle}
+          </button>
         </p>
       </section>
 
