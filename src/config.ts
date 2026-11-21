@@ -10,7 +10,7 @@ export const SITE = {
   /** Pitch slides; empty until they're published. */
   slides: "",
   /** Token-aware BCH address for Community Choice votes (EMBER2026); empty until set. */
-  voteAddress: "",
+  voteAddress: "bitcoincash:zrum8dtm0z7ehsfh0lg87ze32ny0rdxnxs8al3zt76",
   voteCode: "EMBER2026",
 };
 

@@ -100,6 +100,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
 .banner a { padding: 4px 0; }
 .banner .vote { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; }
 .banner code { word-break: break-all; }
+/* White behind the code in both themes: scanners need dark modules on a light ground. */
+.vote-qr { flex-basis: 100%; margin: 4px 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.vote-qr > div { width: 180px; max-width: 100%; background: #fff; padding: 6px; border-radius: 6px; }
+.vote-qr svg { display: block; width: 100%; height: auto; }
 /* Home */
 .hero { margin-top: 24px; }
 .hero-title { font-size: 1.6rem; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 8px; }
