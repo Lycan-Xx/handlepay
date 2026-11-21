@@ -1,0 +1,16 @@
+{
+  // Emits only the .d.ts files; Vite builds the JavaScript.
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "../..",
+    "outDir": "dist/types"
+  },
+  "files": ["src/index.ts"]
+}

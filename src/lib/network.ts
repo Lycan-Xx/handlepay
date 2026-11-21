@@ -46,8 +46,8 @@ export function getProvider(network: BchNetwork): ElectrumNetworkProvider {
   if (!provider) {
     const hostname =
       network === "chipnet"
-        ? import.meta.env.VITE_ELECTRUM_CHIPNET
-        : import.meta.env.VITE_ELECTRUM_MAINNET;
+        ? import.meta.env?.VITE_ELECTRUM_CHIPNET
+        : import.meta.env?.VITE_ELECTRUM_MAINNET;
     provider = hostname
       ? new ElectrumNetworkProvider(network, { hostname })
       : new ElectrumNetworkProvider(network);

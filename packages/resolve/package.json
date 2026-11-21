@@ -1,0 +1,31 @@
+{
+  "name": "@handlepay/resolve",
+  "version": "0.1.0",
+  "description": "Resolve a name like sani@lycanforge.com.ng to the Bitcoin Cash address it has proven it controls (HPAY-BIND v1: NIP-05 + signed Nostr binding + BCH proof transaction).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/types/packages/resolve/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/packages/resolve/src/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@bitauth/libauth": "^3.1.0-next.8",
+    "cashscript": "^0.14.0",
+    "nostr-tools": "^2.26.1"
+  },
+  "engines": { "node": ">=22" },
+  "keywords": ["bitcoin-cash", "bch", "nostr", "nip-05", "identity", "payments", "cashaddr"],
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/Lycan-Xx/handlepay.git", "directory": "packages/resolve" },
+  "homepage": "https://handlepay.lycanforge.com.ng"
+}
