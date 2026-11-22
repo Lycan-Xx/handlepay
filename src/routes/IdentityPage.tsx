@@ -862,7 +862,7 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
         <summary>Why is each step needed?</summary>
         <p className="muted">
           A name is only trusted when two proofs point at each other. <strong>Step 1</strong> makes your domain vouch for
-          your Nostr key. <strong>Step 2</strong> picks the address people will pay. <strong>Step 3</strong> sends a tiny
+          your Nostr key (for a free name, our domain does that). <strong>Step 2</strong> picks the address people will pay. <strong>Step 3</strong> sends a tiny
           payment from that address with your key in its note, which only the address's owner can do, and then publishes
           the signed claim. Anyone can name an address; only its owner can spend from it.
         </p>
@@ -885,16 +885,38 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
             <p className="muted small">Add ?amount=5 to ask for $5, or &memo=Invoice 7 for a note.</p>
           </section>
 
-          <section className="card">
-            <h2>What next?</h2>
-            <p className="muted small">
-              Share the link above to be paid. You can also use the same name to log in to sites with no password.
+          <section className="card next">
+            <p className="journey-kicker">You're set up</p>
+            <h2>Next: see what your payers see</h2>
+            <p className="muted">
+              Share the link above to be paid. To try it from the other side, open your own pay link: it runs the same
+              checks a stranger's browser would, then pays you.
             </p>
             <div className="strip-actions">
-              <button className="ghost" onClick={() => navigate("/auth")}>
-                Sign in with your name
-              </button>
+              <a
+                className="button"
+                href={payPath(handle.full, { network })}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(payPath(handle.full, { network }));
+                }}
+              >
+                Open my pay link →
+              </a>
             </div>
+            <p className="muted small">
+              Your name can also be your login, with no password.{" "}
+              <a
+                href="/auth"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(`/auth?name=${encodeURIComponent(handle.full)}`);
+                }}
+              >
+                See it work
+              </a>
+              .
+            </p>
           </section>
 
           <section className="card">

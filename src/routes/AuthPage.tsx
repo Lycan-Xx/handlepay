@@ -102,7 +102,8 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
   return (
     <>
       <section className="card">
-        <h2>Sign in with your name</h2>
+        <p className="journey-kicker">A demo of a site's login</p>
+        <h2>Your name as a login</h2>
         <p className="muted">
           No password and no account. The site checks your name, gives you a one-time code, and you sign it with your
           name's key (kept in this browser or in a Nostr extension). If the signature comes from the key your name points

@@ -39,7 +39,10 @@ export function Banner() {
       </a>
       {SITE.voteAddress && (
         <span className="vote">
-          Vote with {SITE.voteCode}: <code>{SITE.voteAddress}</code>
+          Vote with {SITE.voteCode}:{" "}
+          <code title={SITE.voteAddress}>
+            {SITE.voteAddress.replace(/^bitcoincash:/, "").slice(0, 8)}…{SITE.voteAddress.slice(-6)}
+          </code>
           <button className="link" onClick={copy}>
             {copied ? "Copied" : "Copy"}
           </button>

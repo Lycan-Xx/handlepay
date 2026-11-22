@@ -68,11 +68,14 @@ export default function App() {
           Get paid
         </a>
         <a href="/security" onClick={link("/security")} aria-current={route.name === "security" ? "page" : undefined}>
-          Why it's safe
+          Try the attack
         </a>
       </nav>
 
-      {network === "mainnet" && <p className="warn mainnet">Real money: payments here are final. Keep amounts tiny while testing.</p>}
+      {/* Only where money can move; elsewhere the "Real money" pill at the top is enough. */}
+      {network === "mainnet" && (route.name === "pay" || route.name === "identity") && (
+        <p className="warn mainnet">Real money: payments here are final. Keep amounts tiny while testing.</p>
+      )}
 
       {route.name === "home" && <HomePage />}
       {route.name === "dev" && <DevHome wallet={wallet} network={network} />}
@@ -105,7 +108,7 @@ export default function App() {
           </a>
           {" · "}
           <a href="/auth" onClick={link("/auth")}>
-            Sign in with your name
+            Your name as a login
           </a>
         </footer>
       )}
