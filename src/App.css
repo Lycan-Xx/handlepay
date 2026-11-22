@@ -460,10 +460,18 @@ fieldset.plain { border: 0; padding: 0; margin: 0; min-width: 0; }
   .print-only { display: block; }
   span.print-only { display: inline; }
   dt.print-only { display: block; }
-  .receipt .tick { border: 1px solid #000; background: #fff; color: #000; }
-  .facts { font-size: 10.5pt; }
+  .receipt .tick { border: 1px solid #000; background: #fff; color: #000; width: 40px; height: 40px; }
+  .receipt-doc-title { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 8px; color: #444; }
+  .receipt-head h2 { font-size: 18pt; }
+  .muted { color: #444; }
+  .facts { font-size: 10.5pt; grid-template-columns: 32mm 1fr; gap: 6px 12px; }
+  .facts dt, .facts dd { break-inside: avoid; }
   .facts code { font-size: 9pt; }
-  .receipt-verify { break-inside: avoid; }
+  .receipt-verify { break-inside: avoid; border-top-color: #999; }
   .receipt-qr { width: 40mm; border: 0; padding: 0; }
+  .receipt-url { font-family: var(--mono); font-size: 8.5pt; word-break: break-all; margin: 6px 0 0; }
+  .receipt-foot { margin-top: 10px; color: #444; }
   a { color: #000; text-decoration: none; }
 }
+.receipt-verify-text { flex: 1 1 200px; min-width: 0; }
+.receipt-verify-text p { margin: 0; }
