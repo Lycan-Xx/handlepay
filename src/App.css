@@ -129,10 +129,6 @@ pre.addr { white-space: pre-wrap; margin: 8px 0 0; }
 .pill:hover:not(:disabled) { background: var(--surface2); }
 .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--net-main); flex: none; }
 .pill.practice .dot { background: var(--net-chip); }
-.nav { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 10px; font-size: 0.9rem; }
-.nav a { padding: 8px 12px; border-radius: 999px; color: var(--muted); text-decoration: none; font-weight: 500; }
-.nav a:hover { background: var(--surface2); color: var(--ink); }
-.nav a[aria-current="page"] { color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line2); }
 
 /* Notes and warnings in a box: the mainnet reminder, a tampered link. */
 .warn.mainnet,
@@ -253,19 +249,56 @@ pre.addr { white-space: pre-wrap; margin: 8px 0 0; }
 .io code { word-break: break-all; font-size: 0.8rem; flex: 1 1 260px; min-width: 0; }
 .io .amt { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-/* ---------- Banner ---------- */
-.banner {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; font-size: 0.75rem;
-  padding-bottom: 6px; margin-bottom: 12px; border-bottom: 1px solid var(--line); color: var(--muted);
+/* ---------- Banner (above the header, every page) ---------- */
+.banner { background: var(--ink); color: #e9e2de; font-size: 0.75rem; }
+.banner-in {
+  max-width: 600px; margin: 0 auto; padding: 4px 16px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0 14px;
 }
-.banner a { padding: 2px 0; }
-.banner button.link { font-size: 0.75rem; }
-.banner .vote { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; }
+.banner a, .banner button.link { color: #fff; font-size: 0.75rem; }
+.banner a { display: inline-flex; align-items: center; min-height: 32px; }
+.banner button.link { min-height: 32px; padding: 0 6px; }
+.banner a:hover, .banner button.link:hover:not(:disabled) { color: #ffd2c2; }
+.banner a:focus-visible, .banner button:focus-visible { outline-color: #fff; }
+.banner .vote { display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; min-width: 0; }
 .banner code { word-break: break-all; font-size: 0.75rem; }
-/* White behind the code: scanners need dark modules on a light ground. */
-.vote-qr { flex-basis: 100%; margin: 4px 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-.vote-qr > div { width: 180px; max-width: 100%; background: #fff; padding: 6px; border-radius: 6px; }
-.vote-qr svg { display: block; width: 100%; height: auto; }
+.vote-qr { flex-basis: 100%; margin: 4px 0 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.vote-qr .qr { width: 180px; }
+
+/* ---------- QR block: white ground and a quiet zone, so any scanner reads it ---------- */
+.qr { background: #fff; padding: 8px; border-radius: 8px; border: 1px solid var(--line); max-width: 100%; flex: none; }
+.qr svg { display: block; width: 100%; height: auto; }
+
+/* ---------- Header controls ---------- */
+.shell > .top { padding: 6px 0 4px; }
+.pill.wallet.on { border-color: var(--line2); }
+.wallet-name { max-width: 9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill:disabled { opacity: 1; cursor: not-allowed; color: var(--muted); background: var(--surface2); }
+.lock-note { margin: 6px 0 0; text-align: right; font-size: 0.8rem; color: var(--muted); }
+.popover-wrap { position: relative; }
+.popover {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: min(320px, calc(100vw - 32px));
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px;
+  box-shadow: 0 8px 30px rgba(23, 19, 19, 0.12); animation: fade 0.15s var(--ease);
+}
+.popover .label { margin-top: 0; }
+.popover .muted { margin: 10px 0 0; }
+/* Long labels only where there is room; the short form says the same thing. */
+@media (max-width: 479px) {
+  .wide-only { display: none; }
+  .shell { padding-left: 12px; padding-right: 12px; }
+  .banner-in { padding: 2px 12px; }
+  .pill { padding: 4px 10px; }
+  .top-tools { gap: 6px; }
+}
+
+/* ---------- Footer (every page) ---------- */
+.foot {
+  margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
+  text-align: center; font-size: 0.85rem; color: var(--muted);
+}
+.foot a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--muted); }
+.foot a:hover { color: var(--accent-strong); }
 
 /* ---------- Home ---------- */
 .hero { margin-top: 28px; }
@@ -313,7 +346,6 @@ a.door:hover { border-color: var(--green); }
 .checkrow input { width: auto; margin: 3px 0 0; flex: none; }
 .needlist { margin: 6px 0; padding-left: 20px; }
 .needlist li { margin: 3px 0; }
-.foot { margin-top: 20px; text-align: center; }
 
 /* ---------- Tour ---------- */
 .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 18px; }

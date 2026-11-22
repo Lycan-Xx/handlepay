@@ -1,15 +1,11 @@
-/** The strip at the top of every page: slides, source code and the vote address. */
+/**
+ * The thin strip above the header on every page: slides (when set), source
+ * code, and the EMBER2026 vote address with Copy and QR. The hackathon's rules
+ * require it, so it stays on every route.
+ */
 import { useMemo, useState } from "react";
-import qrcode from "qrcode-generator";
 import { SITE } from "../config";
-
-/** An SVG QR code for the vote address, so a voter on a phone wallet can scan instead of copying. */
-function qrSvg(text: string): string {
-  const qr = qrcode(0, "M");
-  qr.addData(text);
-  qr.make();
-  return qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
-}
+import { qrSvg } from "../lib/qr";
 
 export function Banner() {
   const [copied, setCopied] = useState(false);
@@ -29,34 +25,36 @@ export function Banner() {
 
   return (
     <aside className="banner" aria-label="Project links">
-      {SITE.slides && (
-        <a href={SITE.slides} target="_blank" rel="noreferrer">
-          Slides
+      <div className="banner-in">
+        {SITE.slides && (
+          <a href={SITE.slides} target="_blank" rel="noreferrer">
+            Slides
+          </a>
+        )}
+        <a href={SITE.source} target="_blank" rel="noreferrer">
+          Source code
         </a>
-      )}
-      <a href={SITE.source} target="_blank" rel="noreferrer">
-        Source code
-      </a>
-      {SITE.voteAddress && (
-        <span className="vote">
-          Vote with {SITE.voteCode}:{" "}
-          <code title={SITE.voteAddress}>
-            {SITE.voteAddress.replace(/^bitcoincash:/, "").slice(0, 8)}…{SITE.voteAddress.slice(-6)}
-          </code>
-          <button className="link" onClick={copy}>
-            {copied ? "Copied" : "Copy"}
-          </button>
-          <button className="link" onClick={() => setShowQr((v) => !v)} aria-expanded={showQr}>
-            {showQr ? "Hide QR" : "QR"}
-          </button>
-        </span>
-      )}
-      {SITE.voteAddress && showQr && (
-        <figure className="vote-qr">
-          <div role="img" aria-label={`QR code for ${SITE.voteAddress}`} dangerouslySetInnerHTML={{ __html: svg }} />
-          <figcaption className="muted small">Scan with a CashTokens wallet, then send {SITE.voteCode}.</figcaption>
-        </figure>
-      )}
+        {SITE.voteAddress && (
+          <span className="vote">
+            Vote with {SITE.voteCode}:{" "}
+            <code title={SITE.voteAddress}>
+              {SITE.voteAddress.replace(/^bitcoincash:/, "").slice(0, 8)}…{SITE.voteAddress.slice(-6)}
+            </code>
+            <button className="link" onClick={copy}>
+              {copied ? "Copied" : "Copy"}
+            </button>
+            <button className="link" onClick={() => setShowQr((v) => !v)} aria-expanded={showQr}>
+              {showQr ? "Hide QR" : "QR"}
+            </button>
+          </span>
+        )}
+        {SITE.voteAddress && showQr && (
+          <figure className="vote-qr">
+            <div className="qr" role="img" aria-label={`QR code for ${SITE.voteAddress}`} dangerouslySetInnerHTML={{ __html: svg }} />
+            <figcaption className="small">Scan with a CashTokens wallet, then send {SITE.voteCode}.</figcaption>
+          </figure>
+        )}
+      </div>
     </aside>
   );
 }
