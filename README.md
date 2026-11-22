@@ -47,9 +47,10 @@ address, so their claim stays **Claimed** (amber) and is never **Verified** (gre
 also remembers what it saw for each name in your browser. If the name later points to a
 different address, it shows **Changed** before you can pay.
 
-There is no account and no HandlePay database of who owns what. A name lives on a domain (your
+There is no account, and no database of bindings or payments. A name lives on a domain (your
 own, or a free one HandlePay hosts for people who don't have one) and on Nostr, and proofs and
-payments live on the Bitcoin Cash chain. Your coins never leave your wallet. See
+payments live on the Bitcoin Cash chain. The only thing HandlePay stores is that list of free
+names (name → Nostr key), and it can't make a name Verified on its own. Your coins never leave your wallet. See
 [docs/SPEC.md](docs/SPEC.md) for the full format, and
 [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) for what it does and doesn't protect against.
 
