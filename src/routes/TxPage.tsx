@@ -24,6 +24,7 @@ import { navigate, txPath } from "../lib/router";
 import { describeTransaction, type TxView } from "../lib/txview";
 import { formatBch } from "../lib/wallet";
 import { CopyButton } from "../components/CopyButton";
+import { Icon, type IconName } from "../components/Icon";
 
 const REFRESH_MS = 15_000;
 /** Parents fetched to compute the fee (and name a proof's address); bigger transactions show what fits. */
@@ -123,8 +124,8 @@ export function TxPage(props: { txid: string; search: URLSearchParams; network: 
 
         <ol className="proof-facts" aria-live="polite">
           <li className={load.state === "ok" ? "ok" : load.state === "loading" ? "" : "bad"}>
-            <span className="pf-mark" aria-hidden>
-              {load.state === "ok" ? "✓" : load.state === "loading" ? "○" : "✗"}
+            <span className="pf-mark">
+              <Icon name={load.state === "ok" ? "check" : load.state === "loading" ? "radio_button_unchecked" : "close"} />
             </span>
             <span>
               <b>
@@ -149,8 +150,8 @@ export function TxPage(props: { txid: string; search: URLSearchParams; network: 
             </span>
           </li>
           <li className={load.state !== "ok" ? "" : load.confirmations > 0 ? "ok" : "wait"}>
-            <span className="pf-mark" aria-hidden>
-              {load.state === "ok" && load.confirmations > 0 ? "✓" : "○"}
+            <span className="pf-mark">
+              <Icon name={load.state === "ok" && load.confirmations > 0 ? "check" : load.state === "ok" ? "hourglass_top" : "radio_button_unchecked"} />
             </span>
             <span>
               <b>
@@ -165,8 +166,8 @@ export function TxPage(props: { txid: string; search: URLSearchParams; network: 
           </li>
           {name && (
             <li className={load.state === "ok" ? nameClass(match, paidAddresses) : ""}>
-              <span className="pf-mark" aria-hidden>
-                {load.state === "ok" ? nameMark(match, paidAddresses) : "○"}
+              <span className="pf-mark">
+                <Icon name={load.state === "ok" ? nameMark(match, paidAddresses) : "radio_button_unchecked"} />
               </span>
               <span>
                 <b>
@@ -299,7 +300,7 @@ export function TxPage(props: { txid: string; search: URLSearchParams; network: 
           <span key={x.url}>
             {i > 0 && " · "}
             <a href={x.url} target="_blank" rel="noreferrer">
-              {x.name}
+              {x.name} <Icon name="open_in_new" label="opens in a new tab" />
             </a>
           </span>
         ))}
@@ -316,9 +317,9 @@ function nameClass(m: NameMatch, paid: Set<string>): string {
   return m.resolution.status === "verified" ? "ok" : "wait";
 }
 
-function nameMark(m: NameMatch, paid: Set<string>): string {
-  if (m.state === "checking") return "○";
-  return matches(m, paid) ? (m.state === "done" && m.resolution.status === "verified" ? "✓" : "!") : "✗";
+function nameMark(m: NameMatch, paid: Set<string>): IconName {
+  if (m.state === "checking") return "radio_button_unchecked";
+  return matches(m, paid) ? (m.state === "done" && m.resolution.status === "verified" ? "check" : "gpp_maybe") : "close";
 }
 
 function nameHeadline(name: string, m: NameMatch, paid: Set<string>, loaded: boolean): string {

@@ -56,8 +56,13 @@ a:hover { color: var(--accent-hover); }
 code, .mono { font-family: var(--mono); }
 hr { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
 
+/* ---------- Icons (Material Symbols, inline SVG sized to the text around it) ---------- */
+.icon { display: inline-flex; width: 1.2em; height: 1.2em; flex: none; vertical-align: -0.25em; }
+.icon svg { width: 100%; height: 100%; fill: currentColor; }
+
 /* ---------- Controls ---------- */
 button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   font: inherit; font-weight: 600; border: 1px solid transparent; cursor: pointer; min-height: 44px;
   background: var(--accent-strong); color: var(--on-accent);
   padding: 8px 18px; border-radius: var(--r-sm);
@@ -87,7 +92,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
   outline: 2px solid var(--accent-strong); outline-offset: 2px;
 }
 a.button {
-  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 18px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 18px;
   border-radius: var(--r-sm); background: var(--accent-strong); color: var(--on-accent); text-decoration: none;
   font-weight: 600; border: 1px solid transparent; text-align: center;
 }
@@ -159,7 +164,7 @@ pre.addr { white-space: pre-wrap; margin: 8px 0 0; }
 .choice.practice .dot { background: var(--net-chip); }
 .choice b { display: block; font-weight: 650; }
 .choice span.d { color: var(--muted); font-weight: 400; font-size: 0.88rem; }
-.choice .tick { margin-left: auto; color: var(--accent-strong); font-weight: 700; }
+.choice .tick { margin-left: auto; color: var(--accent-strong); font-size: 1.3rem; }
 .tip { background: var(--surface2); border-radius: var(--r-sm); padding: 12px 14px; margin-top: 14px; font-size: 0.9rem; color: var(--ink); }
 @media (min-width: 640px) {
   .drawer { bottom: auto; top: 14vh; border-radius: var(--r); }
@@ -202,7 +207,6 @@ pre.addr { white-space: pre-wrap; margin: 8px 0 0; }
 .checks li.bad > span:first-child { color: var(--red); }
 .checks.pending { max-width: 22em; margin-left: auto; margin-right: auto; }
 .checks.pending li { color: var(--muted); }
-.checks.pending li::before { content: "○"; }
 .how { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
 .how summary { cursor: pointer; color: var(--accent-strong); font-size: 0.9rem; font-weight: 600; min-height: 32px; }
 .spinner {
@@ -231,7 +235,7 @@ label.memo input { font-size: 0.95rem; }
 }
 .need b, .need strong { color: var(--ink); font-weight: 650; }
 .stages { list-style: none; padding: 0; margin: 12px 0; display: flex; gap: 8px 18px; flex-wrap: wrap; }
-.stages li { color: var(--muted); font-weight: 500; }
+.stages li { color: var(--muted); font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
 .stages li.done { color: var(--ink); }
 .stages li.now { color: var(--ink); font-weight: 700; }
 .receipt .tick {
@@ -261,16 +265,13 @@ label.memo input { font-size: 0.95rem; }
   display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--r-sm);
   background: var(--surface2); border: 1px solid var(--line);
 }
-.proof-facts .pf-mark {
-  width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center;
-  font-size: 0.8rem; font-weight: 700; background: var(--surface); color: var(--muted); border: 1px solid var(--line2);
-}
+.proof-facts .pf-mark { flex: none; display: inline-flex; color: var(--muted); font-size: 1.25rem; line-height: 1; }
 .proof-facts li.ok { background: var(--green-s); border-color: color-mix(in srgb, var(--ok) 30%, var(--line)); }
-.proof-facts li.ok .pf-mark { background: var(--green); color: #fff; border-color: var(--green); }
+.proof-facts li.ok .pf-mark { color: var(--green); }
 .proof-facts li.wait { background: var(--amber-s); border-color: color-mix(in srgb, var(--warn) 30%, var(--line)); }
-.proof-facts li.wait .pf-mark { color: var(--amber); border-color: var(--warn); }
+.proof-facts li.wait .pf-mark { color: var(--amber); }
 .proof-facts li.bad { background: var(--red-s); border-color: color-mix(in srgb, var(--err) 30%, var(--line)); }
-.proof-facts li.bad .pf-mark { color: var(--red); border-color: var(--err); }
+.proof-facts li.bad .pf-mark { color: var(--red); }
 .proof-facts b { font-weight: 650; word-break: break-word; }
 .io { list-style: none; padding: 0; margin: 0; }
 .io li {
@@ -288,7 +289,8 @@ label.memo input { font-size: 0.95rem; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 0 14px;
 }
 .banner a, .banner button.link { color: #fff; font-size: 0.75rem; }
-.banner a { display: inline-flex; align-items: center; min-height: 32px; }
+.banner a { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; }
+.banner button.link { gap: 4px; }
 .banner button.link { min-height: 32px; padding: 0 6px; }
 .banner a:hover, .banner button.link:hover:not(:disabled) { color: #ffd2c2; }
 .banner a:focus-visible, .banner button:focus-visible { outline-color: #fff; }
@@ -320,6 +322,8 @@ label.memo input { font-size: 0.95rem; }
   .wide-only { display: none; }
   .shell { padding-left: 12px; padding-right: 12px; }
   .banner-in { padding: 2px 12px; }
+  /* The banner stays a thin strip on a phone: words only. */
+  .banner .icon { display: none; }
   .pill { padding: 4px 10px; }
   .top-tools { gap: 6px; }
 }
@@ -340,11 +344,13 @@ label.memo input { font-size: 0.95rem; }
 @media (min-width: 560px) { .roles { grid-template-columns: 1fr 1fr; } }
 .role { display: flex; flex-direction: column; border-top: 3px solid var(--brand); }
 .role h2 { font-size: 1.2rem; }
+.role-icon { font-size: 1.75rem; color: var(--brand); margin-bottom: 8px; }
 .role p { margin: 0 0 18px; flex: 1; }
 .how-link { margin: 20px 0 0; font-weight: 600; }
 .how-link a { display: inline-flex; align-items: center; min-height: 44px; }
 .trust { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 0.85rem; color: var(--muted); }
-.trust li::before { content: "●"; color: var(--brand); font-size: 0.6em; vertical-align: 0.2em; font-weight: 700; margin-right: 6px; }
+.trust li { display: inline-flex; align-items: center; gap: 6px; }
+.trust .icon { color: var(--accent-strong); font-size: 1.15rem; }
 
 /* ---------- Shared bits: chips, action rows, the journey strip ---------- */
 .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 0.85rem; color: var(--muted); }

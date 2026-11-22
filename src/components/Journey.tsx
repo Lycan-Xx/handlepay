@@ -3,6 +3,8 @@
  * behind you ticked, the current one highlighted, and a line saying what to do
  * here. It only displays progress the page already knows.
  */
+import { Icon } from "./Icon";
+
 export function Journey(props: { label: string; steps: string[]; current: number; hint?: string }) {
   const { label, steps, current, hint } = props;
   return (
@@ -15,7 +17,7 @@ export function Journey(props: { label: string; steps: string[]; current: number
           <div key={name} style={{ display: "contents" }}>
             {i > 0 && <div className={`rbar ${i <= current ? "ok" : ""}`} />}
             <div className={`rnode ${i < current ? "ok" : i === current ? "on" : ""}`} aria-current={i === current ? "step" : undefined}>
-              <span className="rb">{i < current ? "✓" : i + 1}</span>
+              <span className="rb">{i < current ? <Icon name="check" label="Done" /> : i + 1}</span>
               <span className="rl">{name}</span>
             </div>
           </div>

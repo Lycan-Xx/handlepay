@@ -25,6 +25,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { decodeTransaction, hexToBin } from "@bitauth/libauth";
 import { CopyButton } from "../components/CopyButton";
+import { Icon } from "../components/Icon";
 import { FundAddress } from "../components/FundAddress";
 import { Journey } from "../components/Journey";
 import { KeyBackup } from "../components/KeyBackup";
@@ -754,11 +755,11 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
               <div className="keychoices">
                 {extension && (
                   <button onClick={() => chooseKey("extension")} disabled={!!busy}>
-                    Use my Nostr extension
+                    <Icon name="extension" /> Use my Nostr extension
                   </button>
                 )}
                 <button className={extension ? "ghost" : ""} onClick={() => chooseKey("browser")} disabled={!!busy}>
-                  {busy === "key" ? "Working…" : hasBrowserKey() ? "Use the key saved in this browser" : "Make a key for me"}
+                  <Icon name="key" /> {busy === "key" ? "Working…" : hasBrowserKey() ? "Use the key saved in this browser" : "Make a key for me"}
                 </button>
               </div>
               <p className="muted small">
@@ -813,7 +814,7 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
           {!connected && !restoring ? (
             <>
               <button onClick={connect}>
-                {wc.state === "connecting" || wc.state === "reconnecting" ? "Show QR" : "Connect wallet"}
+                <Icon name="account_balance_wallet" /> {wc.state === "connecting" || wc.state === "reconnecting" ? "Show QR" : "Connect wallet"}
               </button>
               <p className="need">
                 <b>Use a wallet that works with WizardConnect:</b> Cashonize, Paytaca or Selene. Scan the code with it. Your
@@ -851,7 +852,7 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
                   Refresh
                 </button>
                 <button className="ghost" onClick={switchWallet}>
-                  Use a different wallet
+                  <Icon name="account_balance_wallet" /> Use a different wallet
                 </button>
               </div>
             </>
@@ -891,7 +892,7 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
               {busy === "proof" ? "Approve in your wallet…" : "Send proof"}
             </button>
             <button className="ghost" onClick={switchWallet} disabled={!!busy}>
-              Use a different wallet
+              <Icon name="account_balance_wallet" /> Use a different wallet
             </button>
           </div>
           {restoring && <p className="muted small">Open {wc.walletName ?? "your wallet"} so it can answer.</p>}
@@ -952,7 +953,7 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
                   navigate(payHref);
                 }}
               >
-                Open my pay link
+                Open my pay link <Icon name="arrow_forward" />
               </a>
               <button className="ghost" onClick={() => setLookups((n) => n + 1)}>
                 Check again

@@ -11,6 +11,7 @@ import { useCallback, useState } from "react";
 import type { BchNetwork } from "../lib/network";
 import { NETWORK_LABEL } from "../lib/labels";
 import { Drawer } from "./Drawer";
+import { Icon } from "./Icon";
 
 export function NetworkPicker(props: { network: BchNetwork; onChange: (n: BchNetwork) => void; locked?: boolean }) {
   const { network, onChange, locked = false } = props;
@@ -32,7 +33,8 @@ export function NetworkPicker(props: { network: BchNetwork; onChange: (n: BchNet
         aria-label={`Network: ${label.name}, ${label.detail}.${locked ? " Locked while this transaction is in progress." : " Change"}`}
       >
         <span className="dot" aria-hidden /> {label.name}
-        <span className="wide-only"> · {label.detail}</span> <span aria-hidden>{locked ? "" : "▾"}</span>
+        <span className="wide-only"> · {label.detail}</span>
+        <Icon name={locked ? "lock" : "expand_more"} />
       </button>
       <Drawer open={open} title="Which network?" onClose={close}>
         <button type="button" className="choice" aria-pressed={network === "mainnet"} onClick={() => choose("mainnet")}>
@@ -41,7 +43,7 @@ export function NetworkPicker(props: { network: BchNetwork; onChange: (n: BchNet
             <b>Mainnet · real BCH</b>
             <span className="d">Payments are real and can't be undone.</span>
           </span>
-          {network === "mainnet" && <span className="tick" aria-hidden>✓</span>}
+          {network === "mainnet" && <Icon name="check" className="tick" />}
         </button>
         <button type="button" className="choice practice" aria-pressed={network === "chipnet"} onClick={() => choose("chipnet")}>
           <span className="dot" aria-hidden />
@@ -49,7 +51,7 @@ export function NetworkPicker(props: { network: BchNetwork; onChange: (n: BchNet
             <b>Chipnet · practice coins</b>
             <span className="d">Free test coins with no value. Learn safely.</span>
           </span>
-          {network === "chipnet" && <span className="tick" aria-hidden>✓</span>}
+          {network === "chipnet" && <Icon name="check" className="tick" />}
         </button>
         <p className="tip">
           <strong>Learning?</strong> Use chipnet. Nothing there is worth anything, and you can switch to mainnet when

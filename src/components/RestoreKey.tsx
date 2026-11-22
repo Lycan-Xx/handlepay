@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { extractKey } from "../lib/backup";
 import { hasBrowserKey, importBrowserKey, isEncryptedKey } from "../lib/signer";
+import { Icon } from "./Icon";
 
 export function RestoreKey({ onRestored, disabled = false }: { onRestored: (pubkey: string) => void; disabled?: boolean }) {
   const [text, setText] = useState("");
@@ -83,7 +84,7 @@ export function RestoreKey({ onRestored, disabled = false }: { onRestored: (pubk
         </label>
       )}
       <button type="button" className="ghost" onClick={restore} disabled={disabled || busy || !text.trim() || (encrypted && !password)}>
-        {busy ? "Restoring…" : "Restore and use this key"}
+        <Icon name="upload_file" /> {busy ? "Restoring…" : "Restore and use this key"}
       </button>
       {error && <p className="err">{error}</p>}
     </div>

@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 import { SITE } from "../config";
 import { qrSvg } from "../lib/qr";
+import { Icon } from "./Icon";
 
 export function Banner() {
   const [copied, setCopied] = useState(false);
@@ -28,23 +29,23 @@ export function Banner() {
       <div className="banner-in">
         {SITE.slides && (
           <a href={SITE.slides} target="_blank" rel="noreferrer">
-            Slides
+            <Icon name="slideshow" /> Slides
           </a>
         )}
         <a href={SITE.source} target="_blank" rel="noreferrer">
-          Source code
+          <Icon name="code" /> Source code
         </a>
         {SITE.voteAddress && (
           <span className="vote">
-            Vote with {SITE.voteCode}:{" "}
+            <Icon name="how_to_vote" /> Vote with {SITE.voteCode}:{" "}
             <code title={SITE.voteAddress}>
               {SITE.voteAddress.replace(/^bitcoincash:/, "").slice(0, 8)}…{SITE.voteAddress.slice(-6)}
             </code>
             <button className="link" onClick={copy}>
-              {copied ? "Copied" : "Copy"}
+              <Icon name={copied ? "check" : "content_copy"} /> {copied ? "Copied" : "Copy"}
             </button>
             <button className="link" onClick={() => setShowQr((v) => !v)} aria-expanded={showQr}>
-              {showQr ? "Hide QR" : "QR"}
+              <Icon name="qr_code" /> {showQr ? "Hide QR" : "QR"}
             </button>
           </span>
         )}

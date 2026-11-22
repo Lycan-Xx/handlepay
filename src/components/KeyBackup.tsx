@@ -18,6 +18,7 @@ import {
   isEncryptedKey,
 } from "../lib/signer";
 import { CopyButton } from "./CopyButton";
+import { Icon } from "./Icon";
 
 export function KeyBackup({ name }: { name: string }) {
   const [shown, setShown] = useState<string | null>(null);
@@ -92,14 +93,14 @@ export function KeyBackup({ name }: { name: string }) {
             nsec1 •••• •••• •••• •••• •••• ••••
           </code>
           <button type="button" className="ghost" onClick={() => setShown(exportBrowserKey())}>
-            Reveal
+            <Icon name="visibility" /> Reveal
           </button>
         </div>
       )}
 
       <div className="strip-actions">
         <button type="button" className="ghost" onClick={download}>
-          Download
+          <Icon name="download" /> Download
         </button>
       </div>
 
@@ -118,7 +119,7 @@ export function KeyBackup({ name }: { name: string }) {
           <input type="password" value={password2} onChange={(e) => setPassword2(e.target.value)} autoComplete="new-password" />
         </label>
         <button type="button" className="ghost" onClick={downloadEncrypted} disabled={encrypting || !password}>
-          {encrypting ? "Encrypting…" : "Download encrypted backup"}
+          <Icon name="lock" /> {encrypting ? "Encrypting…" : "Download encrypted backup"}
         </button>
       </div>
 

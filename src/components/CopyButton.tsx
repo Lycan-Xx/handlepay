@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "./Icon";
 
 /** A small Copy button. If the clipboard is blocked the text is still on screen to copy by hand. */
 export function CopyButton({ text, label = "Copy", className = "ghost" }: { text: string; label?: string; className?: string }) {
@@ -13,7 +14,8 @@ export function CopyButton({ text, label = "Copy", className = "ghost" }: { text
     }
   };
   return (
-    <button type="button" className={className} onClick={copy} aria-live="polite">
+    <button type="button" className={`${className} with-icon`} onClick={copy} aria-live="polite">
+      <Icon name={copied ? "check" : "content_copy"} />
       {copied ? "Copied" : label}
     </button>
   );

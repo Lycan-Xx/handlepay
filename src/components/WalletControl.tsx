@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Wallet } from "../hooks/useWallet";
 import { shortAddress } from "../lib/labels";
 import { CopyButton } from "./CopyButton";
+import { Icon } from "./Icon";
 
 export function WalletControl({ wallet, locked = false }: { wallet: Wallet; locked?: boolean }) {
   const { wc, connected, restoring, connect, receiveAddress } = wallet;
@@ -39,6 +40,7 @@ export function WalletControl({ wallet, locked = false }: { wallet: Wallet; lock
     const pairing = wc.state === "connecting" || wc.state === "reconnecting";
     return (
       <button type="button" className="pill wallet" onClick={connect}>
+        <Icon name={pairing ? "qr_code" : "account_balance_wallet"} />
         {pairing ? "Show QR" : <>Connect<span className="wide-only"> wallet</span></>}
       </button>
     );
@@ -54,9 +56,10 @@ export function WalletControl({ wallet, locked = false }: { wallet: Wallet; lock
         aria-expanded={open}
         aria-haspopup="true"
       >
+        <Icon name="account_balance_wallet" />
         <span className="wallet-name">{name}</span>
         {receiveAddress && <span className="wide-only mono small"> · {shortAddress(receiveAddress)}</span>}
-        <span aria-hidden> ▾</span>
+        <Icon name="expand_more" />
       </button>
       {open && (
         <div className="popover" role="group" aria-label="Your wallet">
@@ -71,13 +74,14 @@ export function WalletControl({ wallet, locked = false }: { wallet: Wallet; lock
             {receiveAddress && <CopyButton text={receiveAddress} label="Copy address" />}
             <button
               type="button"
-              className="ghost"
+              className="ghost with-icon"
               disabled={locked}
               onClick={() => {
                 wc.disconnect();
                 setOpen(false);
               }}
             >
+              <Icon name="link_off" />
               Disconnect
             </button>
           </div>

@@ -22,6 +22,7 @@ import { explorerTx, type BchNetwork } from "../lib/network";
 import { MEMO_MAX, cleanMemo, parseBchAmount, paymentErrorMessage, type PayParams, type Receipt as ReceiptData } from "../lib/paylink";
 import { getUsdPerBch, type Price } from "../lib/price";
 import { DUST_SATS, buildSignRequest, formatBch, selectCoins, sendBch } from "../lib/wallet";
+import { Icon } from "./Icon";
 import { Receipt } from "./Receipt";
 
 /** After this long with no answer, remind the payer to open their wallet. */
@@ -245,6 +246,7 @@ export function PayPanel(props: {
         </label>
 
         <button className="block" onClick={start} disabled={!ready}>
+          <Icon name={connected ? "receipt_long" : "account_balance_wallet"} />
           {connected ? "Review payment" : "Connect wallet"}
         </button>
         {!connected && (
@@ -271,7 +273,11 @@ export function PayPanel(props: {
           </p>
         )}
         <div className="strip-actions">
-          {!restoring && <button onClick={connect}>Show QR</button>}
+          {!restoring && (
+            <button onClick={connect}>
+              <Icon name="qr_code" /> Show QR
+            </button>
+          )}
           <button className="ghost" onClick={back}>
             Cancel
           </button>
@@ -361,7 +367,7 @@ export function PayPanel(props: {
           </p>
           <div className="strip-actions">
             <button onClick={pay} disabled={!connected || !ready || !changeAddress || !coins.length || (!!preview && "problem" in preview)}>
-              Send to my wallet to approve
+              <Icon name="send" /> Send to my wallet to approve
             </button>
             <button className="ghost" onClick={back}>
               Back
