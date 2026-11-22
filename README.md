@@ -11,10 +11,6 @@ Track, Paytaca Decentralized Identity bounty, Build with XO bounty).
 
 ## Try it in a minute
 
-0. **Take the tour:** [/tour](https://handlepay.lycanforge.com.ng/tour). Five steps, no wallet:
-   a fake name gets caught and a real one passes (both live checks), then a **simulated**
-   wallet pays it, then how to get your own name. It ends by handing you to the real app on
-   practice coins.
 1. **Try the attack:** [/security](https://handlepay.lycanforge.com.ng/security?network=mainnet). A fresh
    attacker, Mallory, claims Sani's address and tampers with a pay link, live in your
    browser. Both attacks are caught, and no money moves.

@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Journey } from "../components/Journey";
 import { PayPanel } from "../components/PayPanel";
+import { NextStep } from "../components/Tour";
 import { VerifyCard } from "../components/VerifyCard";
 import type { Wallet } from "../hooks/useWallet";
 import type { BchNetwork } from "../lib/network";
@@ -128,6 +129,8 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
           onSent={() => setSent(true)}
         />
       )}
+
+      {sent && <NextStep done={2} lead="That was the whole trip: name, check, pay, receipt." />}
 
       {!sent && resolution && (
         <p className="muted small">

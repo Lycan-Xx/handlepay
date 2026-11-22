@@ -7,11 +7,28 @@
  * and no money moves.
  */
 import { useEffect, useState } from "react";
+import { NextStep } from "../components/Tour";
 import { VerifyCard } from "../components/VerifyCard";
-import { DEMO_HANDLES, MALLORY_HANDLE, runAttackDemo, type AttackRun as Run } from "../lib/attack";
+import {
+  DEMO_HANDLES,
+  MALLORY_HANDLE,
+  makeMallory,
+  runFakeClaim,
+  tamperLink,
+  type FakeClaimResult,
+  type TamperedLink,
+} from "../lib/attack";
 import { useTone } from "../hooks/useTone";
 import type { BchNetwork } from "../lib/network";
+import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
 import { navigate } from "../lib/router";
+
+interface Run {
+  victim: Resolution;
+  fake?: FakeClaimResult;
+  link?: TamperedLink;
+  ms: number;
+}
 
 const short = (s: string) => (s.length > 30 ? `${s.slice(0, 18)}…${s.slice(-8)}` : s);
 
@@ -27,7 +44,24 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
 
   useEffect(() => {
     let cancelled = false;
-    runAttackDemo(victimHandle, network)
+    const started = performance.now();
+    (async () => {
+      // Mallory's checks fetch the same proof and parents as the real name's; reuse them.
+      const live = liveDeps(network);
+      const txCache = new Map<string, ReturnType<typeof live.getTransaction>>();
+      const deps = {
+        ...live,
+        getTransaction: (txid: string) => {
+          if (!txCache.has(txid)) txCache.set(txid, live.getTransaction(txid));
+          return txCache.get(txid)!;
+        },
+      };
+      const victim = await resolveHandle(victimHandle, network, deps);
+      if (victim.status !== "verified") return { victim, ms: performance.now() - started };
+      const mallory = makeMallory(network);
+      const fake = await runFakeClaim(victim, mallory, network, deps);
+      return { victim, fake, link: tamperLink(victimHandle, victim, mallory), ms: performance.now() - started };
+    })()
       .then((r) => !cancelled && setRun(r))
       .catch((e: Error) => !cancelled && setError(e.message));
     return () => {
@@ -172,19 +206,7 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
       )}
 
       {run?.link && (
-        <p className="muted small why">
-          New here?{" "}
-          <a
-            href="/tour"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/tour");
-            }}
-          >
-            Take the guided tour
-          </a>
-          : this, then a simulated payment, then your own name.
-        </p>
+        <NextStep done={1} lead="Both tricks were caught. Now watch the same checks pass for a real name, and pay it." />
       )}
     </>
   );

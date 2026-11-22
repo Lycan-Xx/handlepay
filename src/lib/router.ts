@@ -16,7 +16,6 @@ export type Route =
   | { name: "tx"; txid: string }
   | { name: "security" }
   | { name: "auth" }
-  | { name: "tour" }
   | { name: "not_found"; path: string };
 
 export function matchRoute(pathname: string): Route {
@@ -27,7 +26,6 @@ export function matchRoute(pathname: string): Route {
   if (path === "/pay") return { name: "pay_start" };
   if (path === "/security") return { name: "security" };
   if (path === "/auth") return { name: "auth" };
-  if (path === "/tour") return { name: "tour" };
   const tx = /^\/tx\/([0-9a-fA-F]{64})$/.exec(path);
   if (tx) return { name: "tx", txid: tx[1].toLowerCase() };
   const pay = /^\/pay\/([^/]+)$/.exec(path);

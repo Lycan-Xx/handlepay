@@ -1,9 +1,10 @@
 /**
- * The front page: say what HandlePay is in one line, then offer the tour.
- * The tour (/tour) is kept apart from the real app: it shows the product
- * working with no wallet, then hands the visitor to the real app to practise.
- * People who already know what they came for use the nav.
+ * The front page: say what HandlePay is in one line, then show it working.
+ * One primary button starts the tour at the attack demo, which needs no
+ * wallet; the three-stop strip underneath shows where the tour goes. People
+ * who already know what they came for use the nav.
  */
+import { TourStrip } from "../components/Tour";
 import { DEMO_PAYEE } from "../config";
 import { useTone } from "../hooks/useTone";
 import { navigate } from "../lib/router";
@@ -15,6 +16,8 @@ export function HomePage() {
     e.preventDefault();
     navigate(href);
   };
+  // The tour's first stop: the attack demo, on the demo name's network.
+  const start = `/security?network=${DEMO_PAYEE.network}`;
 
   return (
     <>
@@ -25,23 +28,15 @@ export function HomePage() {
           the name really owns the address, so a copied or swapped address gets caught.
         </p>
         <div className="hero-cta">
-          <a className="button big-cta" href="/tour" onClick={go("/tour")}>
+          <a className="button big-cta" href={start} onClick={go(start)}>
             Watch it work
           </a>
-          <span className="muted small">A two-minute tour · no wallet · no money moves</span>
+          <span className="muted small">About a minute · no wallet · no money moves</span>
         </div>
       </section>
 
-      <h3 className="section">In the tour</h3>
-      <ol className="tour-preview">
-        <li>An attacker's fake name gets caught, live</li>
-        <li>A real name passes the same checks</li>
-        <li>
-          You pay it, with a pretend wallet <span className="sim-chip">Simulated</span>
-        </li>
-        <li>How to get your own free name</li>
-        <li>Then you try it yourself, with free practice coins</li>
-      </ol>
+      <h3 className="section">The tour</h3>
+      <TourStrip />
 
       <p className="muted small home-direct">
         Know what you came for?{" "}

@@ -21,7 +21,7 @@ import { finalizeEvent, generateSecretKey, getPublicKey, type NostrEvent } from 
 import { buildBindingEvent, buildPaytoEvent } from "./binding";
 import { PREFIX, type BchNetwork } from "./network";
 import { parsePayParams, type PayParams } from "./paylink";
-import { liveDeps, resolveHandle, type Resolution, type ResolveDeps } from "./resolve";
+import { resolveHandle, type Resolution, type ResolveDeps } from "./resolve";
 import { payPath } from "./router";
 
 /** The demo names, one per network (a key has one binding at a time). */
@@ -100,34 +100,4 @@ export function tamperLink(victimHandle: string, victim: Resolution, mallory: Ma
   const href = `${base}&to=${mallory.address}`;
   const params = parsePayParams(new URL(href, "https://handlepay.invalid").searchParams);
   return { href, params, recipient: victim.address, malloryAddress: mallory.address };
-}
-
-export interface AttackRun {
-  victim: Resolution;
-  /** Present only when the victim is Verified, so there is something real to copy. */
-  fake?: FakeClaimResult;
-  link?: TamperedLink;
-  ms: number;
-}
-
-/**
- * The whole live demo: check the real name, then let a brand-new Mallory try
- * both tricks. Mallory's checks fetch the same proof and parent transactions
- * as the real name's, so those are fetched once and shared.
- */
-export async function runAttackDemo(victimHandle: string, network: BchNetwork, live: ResolveDeps = liveDeps(network)): Promise<AttackRun> {
-  const started = performance.now();
-  const txCache = new Map<string, ReturnType<ResolveDeps["getTransaction"]>>();
-  const deps: ResolveDeps = {
-    ...live,
-    getTransaction: (txid: string) => {
-      if (!txCache.has(txid)) txCache.set(txid, live.getTransaction(txid));
-      return txCache.get(txid)!;
-    },
-  };
-  const victim = await resolveHandle(victimHandle, network, deps);
-  if (victim.status !== "verified") return { victim, ms: performance.now() - started };
-  const mallory = makeMallory(network);
-  const fake = await runFakeClaim(victim, mallory, network, deps);
-  return { victim, fake, link: tamperLink(victimHandle, victim, mallory), ms: performance.now() - started };
 }
