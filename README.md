@@ -12,6 +12,7 @@ instead of a 42-character address. Before you pay, HandlePay checks that the nam
 controls the address, so a copied or swapped address gets caught.
 
 **Live demo:** https://handlepay.lycanforge.com.ng. No account and no sign-up.
+**Slides:** [the BCH BLAZE 2026 pitch deck](https://docs.google.com/presentation/d/1azqy3TEcfmKQO9xnCiU9EeRiqra9SR1WMBvFKZAs9ww/edit?usp=sharing).
 
 Built for [BCH BLAZE 2026](https://dorahacks.io/hackathon/bchblaze2026/detail) (Mainnet
 Track, Paytaca Decentralized Identity bounty, Build with XO bounty).
