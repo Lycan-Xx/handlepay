@@ -13,6 +13,7 @@ import { IdentityPage } from "./routes/IdentityPage";
 import { PayPage } from "./routes/PayPage";
 import { PayStartPage } from "./routes/PayStartPage";
 import { SecurityPage } from "./routes/SecurityPage";
+import { TourPage } from "./routes/TourPage";
 import { TxPage } from "./routes/TxPage";
 import "./App.css";
 
@@ -89,6 +90,7 @@ export default function App() {
       )}
       {route.name === "security" && <SecurityPage key={network} network={network} search={search} />}
       {route.name === "auth" && <AuthPage key={network} network={network} search={search} />}
+      {route.name === "tour" && <TourPage />}
       {route.name === "not_found" && (
         <section className="card">
           <h2>Page not found</h2>

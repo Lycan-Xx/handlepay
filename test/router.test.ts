@@ -12,6 +12,7 @@ describe("matchRoute", () => {
     expect(matchRoute("/identity")).toEqual({ name: "identity" });
     expect(matchRoute("/security")).toEqual({ name: "security" });
     expect(matchRoute("/auth/")).toEqual({ name: "auth" });
+    expect(matchRoute("/tour")).toEqual({ name: "tour" });
     expect(matchRoute("/security/extra").name).toBe("not_found");
   });
 
