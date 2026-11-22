@@ -81,12 +81,20 @@ export function useWallet(network: BchNetwork) {
     setShowQR(true);
   };
 
+  /** Drop the connected wallet and start pairing another ("Use a different wallet"). */
+  const switchWallet = async () => {
+    await wc.disconnect();
+    wc.connect();
+    setShowQR(true);
+  };
+
   return {
     wc,
     connected,
     /** Keys and balance known from the saved session; waiting for the wallet to answer before it can sign. */
     restoring,
     connect,
+    switchWallet,
     showQR,
     setShowQR,
     addresses,

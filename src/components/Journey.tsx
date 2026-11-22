@@ -10,7 +10,7 @@ export function Journey(props: { label: string; steps: string[]; current: number
       <p className="journey-kicker">
         {label} · Step {Math.min(current + 1, steps.length)} of {steps.length}
       </p>
-      <div className="rail">
+      <div className={`rail ${steps.length > 5 ? "rail-long" : ""}`}>
         {steps.map((name, i) => (
           <div key={name} style={{ display: "contents" }}>
             {i > 0 && <div className={`rbar ${i <= current ? "ok" : ""}`} />}

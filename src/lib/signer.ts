@@ -79,12 +79,32 @@ export const isEncryptedKey = (input: string) => input.trim().toLowerCase().star
  * key may be the only way to control a name the person has claimed.
  */
 export function importBrowserKey(input: string, opts: { replace?: boolean; password?: string } = {}): string {
+  const secret = parseSecret(input, opts.password);
+  const existing = browserKeyPubkey();
+  if (existing && existing !== getPublicKey(secret) && !opts.replace) {
+    throw new Error("This browser already has a different key saved. Back it up first if it holds a name, then tick the box to replace it.");
+  }
+  writeSecret(secret);
+  return getPublicKey(secret);
+}
+
+/**
+ * "Verify your backup": true when `input` (nsec, hex, or ncryptsec with its
+ * password) is the key saved in this browser. Saves nothing; throws the same
+ * sentences as importBrowserKey when the input can't be read.
+ */
+export function backupMatchesBrowserKey(input: string, password?: string): boolean {
+  const pub = browserKeyPubkey();
+  return !!pub && getPublicKey(parseSecret(input, password)) === pub;
+}
+
+function parseSecret(input: string, password?: string): Uint8Array {
   const text = input.trim();
   let secret: Uint8Array;
   if (isEncryptedKey(text)) {
-    if (!opts.password) throw new Error("This backup is encrypted. Enter the password you chose when you saved it.");
+    if (!password) throw new Error("This backup is encrypted. Enter the password you chose when you saved it.");
     try {
-      secret = nip49Decrypt(text.toLowerCase(), opts.password);
+      secret = nip49Decrypt(text.toLowerCase(), password);
     } catch {
       throw new Error("That password doesn't open this backup, or the backup is damaged.");
     }
@@ -101,12 +121,7 @@ export function importBrowserKey(input: string, opts: { replace?: boolean; passw
       );
     }
   }
-  const existing = browserKeyPubkey();
-  if (existing && existing !== getPublicKey(secret) && !opts.replace) {
-    throw new Error("This browser already has a different key saved. Back it up first if it holds a name, then tick the box to replace it.");
-  }
-  writeSecret(secret);
-  return getPublicKey(secret);
+  return secret;
 }
 
 /** The key as `nsec1…`, for the person to back up. */

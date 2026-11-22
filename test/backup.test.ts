@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { backupFileName, backupFileText, extractKey } from "../src/lib/backup";
 import {
   BACKUP_PASSWORD_MIN,
+  backupMatchesBrowserKey,
   browserKeyNpub,
   browserKeyPubkey,
   createBrowserKey,
@@ -89,6 +90,20 @@ describe("encrypted backup (NIP-49)", () => {
     expect(() => importBrowserKey(ncryptsec)).toThrow(/encrypted/);
     expect(() => importBrowserKey(ncryptsec, { password: "wrong password" })).toThrow(/password/);
     expect(browserKeyPubkey()).toBeNull();
+  });
+
+  it("verifies a pasted backup against the saved key without saving anything", () => {
+    createBrowserKey();
+    const nsec = exportBrowserKey()!;
+    const ncryptsec = exportBrowserKeyEncrypted("correct horse", LOGN)!;
+    expect(backupMatchesBrowserKey(nsec)).toBe(true);
+    expect(backupMatchesBrowserKey(ncryptsec, "correct horse")).toBe(true);
+    expect(() => backupMatchesBrowserKey(ncryptsec, "wrong password")).toThrow(/password/);
+
+    const other = exportBrowserKey()!;
+    installStorage();
+    createBrowserKey();
+    expect(backupMatchesBrowserKey(other)).toBe(false);
   });
 
   it(`needs a password of at least ${BACKUP_PASSWORD_MIN} characters`, () => {

@@ -337,41 +337,55 @@ pre.addr { white-space: pre-wrap; margin: 8px 0 0; }
 .card.next { border-color: color-mix(in srgb, var(--accent-strong) 35%, var(--line)); }
 .card.next .muted { margin: 0; }
 
-/* ---------- Identity steps ---------- */
-.rail { display: flex; align-items: center; margin: 22px 0 6px; }
-.rnode { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+/* ---------- Progress strip (Journey) ---------- */
+.rail { display: flex; align-items: flex-start; margin: 16px 0 6px; }
+.rnode { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; min-width: 0; }
 .rnode .rb {
-  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 0.8rem; font-weight: 650;
-  background: var(--surface2); color: var(--muted); border: 1px solid var(--line2);
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 0.78rem; font-weight: 700;
+  background: var(--surface); color: var(--muted); border: 1px solid var(--line2);
 }
 .rnode.on .rb { background: var(--accent-strong); color: #fff; border-color: var(--accent-strong); }
-.rnode.ok .rb { background: var(--green); color: #fff; border-color: var(--green); }
-.rnode .rl { font-size: 0.68rem; color: var(--muted); }
-.rnode.on .rl { color: var(--ink); font-weight: 600; }
-.rbar { flex: 1; height: 2px; background: var(--line2); margin: 0 4px 16px; }
-.rbar.ok { background: var(--green); }
-.step h2 { display: flex; align-items: center; gap: 10px; }
-.step-no {
-  display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
-  border-radius: 50%; background: var(--accent-strong); color: #fff; font-size: 0.8rem; flex: none;
+.rnode.ok .rb { background: var(--accent-soft); color: var(--accent-strong); border-color: color-mix(in srgb, var(--accent-strong) 30%, var(--line)); }
+.rnode .rl { font-size: 0.68rem; color: var(--muted); white-space: nowrap; }
+.rnode.on .rl { color: var(--ink); font-weight: 650; }
+.rbar { flex: 1; min-width: 4px; height: 2px; background: var(--line2); margin: 12px 3px 0; }
+.rbar.ok { background: var(--accent-strong); }
+/* Seven stops don't fit with labels at 375px: keep the current one's label; the kicker says "Step n of 7". */
+@media (max-width: 479px) {
+  .rail-long .rnode:not(.on) .rl { visibility: hidden; }
+  .rail-long .rnode .rl { max-width: 1.6em; overflow: visible; }
 }
-.step .done { color: var(--green); }
-.step.locked { opacity: 0.55; }
-.step.locked .step-no { background: var(--surface2); color: var(--muted); }
-.step.current { border-color: var(--accent-strong); box-shadow: 0 0 0 3px var(--accent-soft); }
-.step.finished .step-no { background: var(--green); color: #fff; }
+
+/* ---------- Get paid steps ---------- */
+.step h2 { font-size: 1.25rem; }
+.current-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin: 0 0 12px; }
+.current-name strong { word-break: break-all; }
+.full-name { margin: -4px 0 8px; word-break: break-all; }
+label.spaced { margin-top: 16px; }
+.keychoices { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 12px; }
+.keychoices button { flex: 1 1 220px; }
+.subpanel { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.subpanel > .label:first-child { margin-top: 0; }
+fieldset.plain { border: 0; padding: 0; margin: 0; min-width: 0; }
+.keybackup .label:first-child { margin-top: 4px; }
+.hidden-key { color: var(--faint); letter-spacing: 0.05em; }
+.tick-required {
+  margin: 18px 0 0; padding: 14px; border-radius: var(--r-sm);
+  background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent-strong) 25%, var(--line));
+}
 .copyrow { display: flex; gap: 8px; align-items: stretch; margin: 6px 0 10px; }
 .copyrow .addr { flex: 1; min-width: 0; }
-.copyrow button { min-height: 0; padding: 4px 14px; border-radius: 10px; align-self: flex-start; }
+.copyrow button { padding: 4px 14px; align-self: flex-start; flex: none; }
 .copyrow .addr, .copyrow button { margin-top: 0; }
-.note { border-radius: 12px; padding: 12px 14px; margin: 12px 0; font-size: 0.9rem; background: var(--surface2); }
-.note.violet { background: var(--accent-soft); }
+
+/* ---------- Notes ---------- */
+.note { border-radius: var(--r-sm); padding: 12px 14px; margin: 12px 0; font-size: 0.9rem; background: var(--surface2); color: var(--ink); }
 .note.blue { background: var(--blue-s); }
 .note.amber { background: var(--amber-s); }
 .note.green { background: var(--green-s); }
-.why { text-align: center; margin-top: 18px; }
-.card.how { padding: 14px 20px; }
-.card.how p { margin: 10px 0 0; }
+.card.how-card { padding: 4px 20px 14px; box-shadow: none; }
+.card.how-card summary { cursor: pointer; color: var(--accent-strong); font-weight: 600; font-size: 0.9rem; min-height: 44px; display: flex; align-items: center; }
+.card.how-card p { margin: 4px 0 0; }
 
 /* ---------- Attack page ---------- */
 .chain { display: grid; gap: 10px; margin: 16px 0; }
