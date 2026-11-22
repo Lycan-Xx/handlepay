@@ -7,7 +7,6 @@
  * and no money moves.
  */
 import { useEffect, useState } from "react";
-import { NextStep } from "../components/Tour";
 import { VerifyCard } from "../components/VerifyCard";
 import {
   DEMO_HANDLES,
@@ -200,10 +199,6 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
           </button>
           <p className="muted small">The pay page warns about the ignored address and pays only {victimName}.</p>
         </section>
-      )}
-
-      {run?.link && (
-        <NextStep done={1} lead="Both tricks were caught. Now watch the same checks pass for a real name, and pay it." />
       )}
     </>
   );

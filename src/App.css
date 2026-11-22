@@ -301,80 +301,41 @@ pre.addr { white-space: pre-wrap; margin: 8px 0 0; }
 .foot a:hover { color: var(--accent-strong); }
 
 /* ---------- Home ---------- */
-.hero { margin-top: 28px; }
-.hero-title { font-size: 2rem; line-height: 1.1; letter-spacing: -0.03em; margin: 0 0 10px; }
-.hero form { margin-top: 18px; }
-.hero input { font-size: 1.1rem; padding: 14px 16px; }
-.hero button[type="submit"] { width: 100%; margin-top: 4px; }
+.hero { margin: 36px 0 8px; }
+.hero-title { font-size: clamp(2rem, 8vw, 2.75rem); line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; margin: 0 0 14px; }
+.hero-lead { font-size: 1.1rem; color: var(--muted); margin: 0; max-width: 32em; }
+.roles { display: grid; gap: 0 14px; margin-top: 12px; }
+@media (min-width: 560px) { .roles { grid-template-columns: 1fr 1fr; } }
+.role { display: flex; flex-direction: column; border-top: 3px solid var(--brand); }
+.role h2 { font-size: 1.2rem; }
+.role p { margin: 0 0 18px; flex: 1; }
+.how-link { margin: 20px 0 0; font-weight: 600; }
+.how-link a { display: inline-flex; align-items: center; min-height: 44px; }
+.trust { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 0.85rem; color: var(--muted); }
+.trust li::before { content: "●"; color: var(--brand); font-size: 0.6em; vertical-align: 0.2em; font-weight: 700; margin-right: 6px; }
+
+/* ---------- Shared bits: chips, action rows, the journey strip ---------- */
 .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 0.85rem; color: var(--muted); }
 .chip {
-  display: inline-flex; align-items: center; min-height: 36px; padding: 4px 12px; border-radius: 999px;
-  background: var(--green-s); color: var(--green); border: 1px solid transparent; font-family: var(--mono);
+  display: inline-flex; align-items: center; min-height: 40px; padding: 4px 12px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-strong); border: 1px solid transparent; font-family: var(--mono);
   font-size: 0.8rem; font-weight: 500; text-decoration: none;
 }
-.chip:hover { border-color: var(--green); }
-.chip.amber { background: var(--amber-s); color: var(--amber); font-family: inherit; font-weight: 550; }
-.chip.amber:hover { border-color: var(--amber); }
-.strip-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-.entries { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 12px; }
-a.entry { display: block; color: inherit; text-decoration: none; }
-a.entry h2 { color: var(--ink); }
-a.entry p { margin: 0; }
-a.entry:hover { border-color: var(--green); }
-
-/* ---------- Two doors, journey strip ---------- */
-.doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 12px; }
-a.door { display: block; color: inherit; text-decoration: none; position: relative; padding-top: 20px; }
-a.door h2 { color: var(--ink); font-size: 1.1rem; margin: 6px 0 6px; }
-a.door p { margin: 0 0 8px; }
-a.door:hover { border-color: var(--green); }
-.door-no {
-  display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
-  background: var(--green); color: #fff; font-weight: 700;
-}
-.door-steps { font-size: 0.76rem; color: var(--muted); letter-spacing: 0.02em; }
-.card.quiet { background: transparent; box-shadow: none; }
-.card.quiet p { margin: 0 0 6px; }
-.journey { margin: 14px 0 12px; padding: 12px 14px 10px; border: 1px solid var(--line2); border-radius: 14px; background: var(--surface); }
-.journey .rail { margin: 10px 0 4px; }
-.journey-kicker { margin: 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
-.journey-hint { margin: 6px 0 0; font-size: 0.92rem; color: var(--ink); }
-.keychoice { margin-top: 12px; padding: 12px 14px; border: 1px dashed var(--line2); border-radius: 12px; }
+.chip:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent-strong); }
+.strip-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.journey { margin: 20px 0 4px; padding: 14px 16px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+.journey .rail { margin: 12px 0 4px; }
+.journey-kicker { margin: 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 650; }
+.journey-hint { margin: 8px 0 0; font-size: 0.92rem; color: var(--ink); }
+.keychoice { margin-top: 12px; }
 .keychoice .label { margin-top: 0; }
 .keychoice details { margin-top: 10px; }
-.checkrow { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; font-size: 0.88rem; }
-.checkrow input { width: auto; margin: 3px 0 0; flex: none; }
+.checkrow { display: flex; align-items: flex-start; gap: 10px; margin: 12px 0; font-size: 0.9rem; color: var(--ink); }
+.checkrow input { width: 20px; height: 20px; min-height: 0; margin: 2px 0 0; flex: none; accent-color: var(--accent-strong); }
 .needlist { margin: 6px 0; padding-left: 20px; }
 .needlist li { margin: 3px 0; }
-
-/* ---------- Tour ---------- */
-.hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 18px; }
-a.button.big-cta { font-size: 1.05rem; padding: 12px 26px; min-height: 52px; }
-.tour { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 10px; }
-a.tour-stop {
-  display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; color: inherit; text-decoration: none;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
-  transition: border-color 0.15s var(--ease);
-}
-a.tour-stop:hover { border-color: var(--green); }
-.tour-no {
-  flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--green-s); color: var(--green); font-weight: 700; font-size: 0.9rem;
-}
-.tour-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.tour-body b { font-weight: 600; }
-.tour-tag {
-  align-self: flex-start; display: inline-block; margin: 6px 0 0; padding: 2px 10px; border-radius: 999px;
-  font-size: 0.74rem; font-weight: 600;
-}
-.tour-tag.ok { background: var(--green-s); color: var(--green); }
-.tour-tag.amber { background: var(--amber-s); color: var(--amber); }
-.home-direct { margin-top: 18px; }
-.home-foot { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
-.card.next { border-color: color-mix(in srgb, var(--green) 45%, var(--line)); }
-.card.next h2 { margin-top: 6px; }
+.card.next { border-color: color-mix(in srgb, var(--accent-strong) 35%, var(--line)); }
 .card.next .muted { margin: 0; }
-.next-lead { margin: 6px 0 0; font-size: 0.92rem; }
 
 /* ---------- Identity steps ---------- */
 .rail { display: flex; align-items: center; margin: 22px 0 6px; }
