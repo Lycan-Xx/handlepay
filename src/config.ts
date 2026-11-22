@@ -9,6 +9,8 @@ export const SITE = {
   /** The live app. Used where an outside party must fetch something from us whatever page we run on. */
   url: "https://handlepay.lycanforge.com.ng",
   source: "https://github.com/Lycan-Xx/handlepay",
+  /** Where people tell us how trying it went: a GitHub issue form (.github/ISSUE_TEMPLATE/feedback.yml). */
+  feedback: "https://github.com/Lycan-Xx/handlepay/issues/new?template=feedback.yml",
   /** Pitch slides (the Widget Factory template copy, shared view-by-link). */
   slides: "https://docs.google.com/presentation/d/1azqy3TEcfmKQO9xnCiU9EeRiqra9SR1WMBvFKZAs9ww/edit?usp=sharing",
   /** Token-aware BCH address for Community Choice votes (EMBER2026); empty until set. */

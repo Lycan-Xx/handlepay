@@ -1,0 +1,58 @@
+name: Feedback on trying HandlePay
+description: Tell us where you got stuck, what confused you, or what you liked. Two minutes is plenty.
+title: "[Feedback] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying HandlePay. Short answers are fine, and every field except the first is optional.
+        Please don't paste private keys, backup files or seed phrases here: this page is public.
+  - type: dropdown
+    id: tried
+    attributes:
+      label: What did you try?
+      multiple: true
+      options:
+        - Try the attack (/security)
+        - Pay someone, e.g. Sani
+        - Get a free name (name@handlepay.lycanforge.com.ng)
+        - Use a name on my own domain
+        - Sign in with my name (/auth)
+        - Check a payment (/tx)
+        - The @handlepay/resolve npm package
+    validations:
+      required: true
+  - type: textarea
+    id: stuck
+    attributes:
+      label: Where did you stop, or get confused?
+      description: The exact step or screen helps most. A screenshot is welcome.
+  - type: textarea
+    id: badges
+    attributes:
+      label: What did you think Verified (green) and Claimed (amber) meant?
+  - type: textarea
+    id: would-use
+    attributes:
+      label: Would you send a HandlePay link instead of an address? Why or why not?
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      options:
+        - mainnet
+        - chipnet
+        - not sure
+  - type: input
+    id: wallet
+    attributes:
+      label: Wallet used, if any
+      placeholder: Paytaca, Cashonize, Selene…
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - Phone
+        - Laptop or desktop
+        - Both

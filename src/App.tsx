@@ -3,6 +3,7 @@ import { Banner } from "./components/Banner";
 import { NetworkPicker } from "./components/NetworkPicker";
 import { WalletControl } from "./components/WalletControl";
 import { WalletQR } from "./components/WalletQR";
+import { SITE } from "./config";
 import { useNetwork } from "./hooks/useNetwork";
 import { NetworkLockContext } from "./hooks/useNetworkLock";
 import { useWallet } from "./hooks/useWallet";
@@ -101,6 +102,10 @@ export default function App() {
           <span aria-hidden> · </span>
           <a href="/auth" onClick={link("/auth")}>
             Your name as a login
+          </a>
+          <span aria-hidden> · </span>
+          <a href={SITE.feedback} target="_blank" rel="noreferrer">
+            Give feedback
           </a>
         </footer>
       </div>
