@@ -4,3 +4,6 @@ dist
 xo/.data*
 xo/FEEDBACK-NOTES.md
 docs/SLIDES-DRAFT.md
+
+# Cloudflare local runtime scratch (wrangler pages dev)
+.wrangler
