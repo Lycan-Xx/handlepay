@@ -415,7 +415,7 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
         <h2>Get paid by name</h2>
         <p className="muted">
           Link your name to your wallet, so people can pay <strong>{handle?.full ?? "you@yourdomain.com"}</strong> instead
-          of an address. Your keys never leave your wallet or your Nostr extension.
+          of an address. Your coins stay in your wallet, and the name's key stays on your device.
         </p>
         {!step1Done && (
           <div className="need">

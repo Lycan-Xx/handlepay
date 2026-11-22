@@ -44,7 +44,7 @@ export function HomePage() {
             ←
           </span>
           <h2>I want to get paid by name</h2>
-          <p className="muted">Link a name you own to your wallet, then share one pay link instead of an address.</p>
+          <p className="muted">Get a free name (no domain needed), link it to your wallet, then share one pay link instead of an address.</p>
           <p className="door-steps">Name &amp; key · Wallet · Proof · Publish</p>
         </a>
       </section>
@@ -71,8 +71,8 @@ export function HomePage() {
         <a href="/auth" onClick={go("/auth")}>
           Sign in with it
         </a>{" "}
-        to a site, no password. No account, and no HandlePay server: names live on your own domain and on Nostr, and proofs and payments live on
-        the Bitcoin Cash chain. Your keys never leave your wallet.
+        to a site, no password. No account. A name lives on a domain (yours, or a free one we host) and on Nostr; proofs and
+        payments live on the Bitcoin Cash chain. Your coins never leave your wallet.
       </p>
     </>
   );

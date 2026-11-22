@@ -39,10 +39,41 @@ address, so their claim stays **Claimed** (amber) and is never **Verified** (gre
 also remembers what it saw for each name in your browser. If the name later points to a
 different address, it shows **Changed** before you can pay.
 
-There is no HandlePay server or database. Names live on your own domain and on Nostr, and
-proofs and payments live on the Bitcoin Cash chain. Your keys never leave your wallet or
-your Nostr signer. See [docs/SPEC.md](docs/SPEC.md) for the full format, and
+There is no account and no HandlePay database of who owns what. A name lives on a domain (your
+own, or a free one HandlePay hosts for people who don't have one) and on Nostr, and proofs and
+payments live on the Bitcoin Cash chain. Your coins never leave your wallet. See
+[docs/SPEC.md](docs/SPEC.md) for the full format, and
 [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md) for what it does and doesn't protect against.
+
+## Free names
+
+Owning a domain was the biggest barrier to getting paid by name, so HandlePay can host the
+domain part. On **Get paid**, pick **Free name**, type a short name, and press Claim. You get
+`yourname@handlepay.lycanforge.com.ng`, and the key that proves it can be made in your
+browser, so you need neither a domain nor a Nostr extension, only a wallet.
+
+- **What the server does.** A small Cloudflare Pages Function (`functions/`) serves the
+  standard NIP-05 file (`/.well-known/nostr.json`) and lets a key holder claim or release a
+  name. Every request is signed by the claiming key (NIP-98 HTTP auth), so nobody can claim a
+  name for someone else's key, and each signed request works once.
+- **What it can't do.** It never decides who gets paid. A name is **Verified** only when the
+  owner's wallet has also made the BCH proof transaction naming the same key. If the server
+  listed a wrong key, the name would come out **Claimed**, not Verified.
+- **What you trust it for.** The same thing you trust any domain owner for: that the name
+  maps to the right key. A first-time payer has no history to compare with (see the threat
+  model).
+- **Limits.** 3 to 24 lowercase letters, digits, `-` and `_`; a reserved list; three names
+  per key; ten writes per network address per hour; first come, first served.
+- **A key kept in the browser** lives only on that device. The page tells people to back it
+  up, and losing it means losing control of the name.
+
+To run your own copy, create a KV namespace and bind it to the Pages project as `NAMES`
+(Settings, Functions, KV namespace bindings, for Production and Preview). Without it the
+rest of the site works and free names answer "not switched on". Check a running copy with:
+
+```bash
+node scripts/smoke-names.mjs https://your-site.example   # claims and releases a throwaway name
+```
 
 ## Use the resolver in your own app
 
