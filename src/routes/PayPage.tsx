@@ -62,7 +62,7 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
   const hint = sent
     ? "Your payment is on its way. This page follows it until it confirms."
     : stage === 2
-      ? "The name checked out. Enter the amount and approve in your wallet."
+      ? "The name checked out. Enter the amount, connect your wallet, review, then approve in the wallet."
       : !resolution
         ? error
           ? "We couldn't finish the check."
@@ -130,18 +130,8 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
       )}
 
       {!sent && resolution && (
-        <p className="muted small">
-          Why can you trust this check?{" "}
-          <a
-            href="/security"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate(`/security?network=${network}`);
-            }}
-          >
-            See how a fake name gets caught
-          </a>
-          . Want people to pay you like this?{" "}
+        <p className="muted small quiet-link">
+          Want people to pay you like this?{" "}
           <a
             href="/identity"
             onClick={(e) => {
@@ -151,7 +141,6 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
           >
             Get your own free name
           </a>
-          .
         </p>
       )}
     </>

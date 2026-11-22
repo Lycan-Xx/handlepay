@@ -67,7 +67,7 @@ export default function App() {
           {route.name === "home" && <HomePage />}
           {route.name === "dev" && <DevHome wallet={wallet} network={network} />}
           {route.name === "identity" && <IdentityPage key={network} wallet={wallet} network={network} />}
-          {route.name === "pay_start" && <PayStartPage />}
+          {route.name === "pay_start" && <PayStartPage search={search} />}
           {route.name === "pay" && (
             <PayPage key={`${route.handle}|${network}`} handle={route.handle} search={search} wallet={wallet} network={network} />
           )}
