@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="https://handlepay.lycanforge.com.ng">
+    <img src="public/assets/handlepay-banner.png" width="100%"
+      alt="HandlePay: Your name. Your money. Your control. A simpler way to send and receive Bitcoin Cash using human-readable payment names." />
+  </a>
+</p>
+
 # HandlePay
 
 **Pay people, not addresses.** Send Bitcoin Cash to a name like `sani@lycanforge.com.ng`
