@@ -10,7 +10,7 @@ import {
   proofOpReturnChunks,
 } from "../src/lib/binding";
 import type { ChainTx } from "../src/lib/network";
-import type { Nip05Result } from "../src/lib/nostr";
+import { RelaysUnreachableError, type Nip05Result } from "../src/lib/nostr";
 import { paymentGate, resolveHandle, type ResolveDeps } from "../src/lib/resolve";
 import { buildSignRequest, txidOf } from "../src/lib/wallet";
 import { fundingTx, nostrKey, owner } from "./helpers";
@@ -149,6 +149,16 @@ describe("resolveHandle", () => {
       throw new Error("Request timed out");
     };
     await expect(resolveHandle(HANDLE, "chipnet", w.deps)).rejects.toThrow(/Couldn't reach the chipnet BCH server/);
+  });
+
+  it("fails the check, not the name, when no Nostr relay can be reached", async () => {
+    const w = world();
+    seedSani(w);
+    w.deps.queryEvents = async () => {
+      throw new RelaysUnreachableError();
+    };
+    // A Verified name must never be reported as "Not found" because the relays were down.
+    await expect(resolveHandle(HANDLE, "chipnet", w.deps)).rejects.toThrow(/Couldn't reach any Nostr relay/);
   });
 
   it("fails the check when only a coin the proof spent can't be fetched", async () => {
