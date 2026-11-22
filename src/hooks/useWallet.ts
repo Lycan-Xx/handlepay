@@ -11,14 +11,28 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useWizardConnect } from "@wizardconnect/react";
+import { SITE } from "../config";
 import type { BchNetwork } from "../lib/network";
 import { deriveAddresses, getCoins, type WalletAddress, type WalletCoin } from "../lib/wallet";
 
 export type Wallet = ReturnType<typeof useWallet>;
 
+/**
+ * The icon wallets show for HandlePay in their list of connected sites and on
+ * every signing request, sent to the wallet in WizardConnect's dapp_ready.
+ *
+ * It is a full https URL on the live domain, never this page's own origin, so
+ * it loads on the person's phone even when the app runs on localhost or a
+ * preview deploy. It is not a data: URI: Paytaca's browser extension only
+ * allows images with `img-src *`, which doesn't match data: URIs, so one would
+ * be blocked there. Cashonize and Paytaca both show it with a plain <img> at
+ * about 48-54px, so a 192px square PNG is sharp on 3x screens; the logo's
+ * transparent corners suit light and dark wallet themes alike.
+ */
+const WALLET_ICON = `${SITE.url}/icon-192.png`;
+
 export function useWallet(network: BchNetwork) {
-  // The wallet shows this name and icon when asked to pair, so it can tell the person which site is asking.
-  const wc = useWizardConnect({ dappName: "HandlePay", dappIcon: `${window.location.origin}/brand/logo-128.png` });
+  const wc = useWizardConnect({ dappName: "HandlePay", dappIcon: WALLET_ICON });
   const [showQR, setShowQR] = useState(false);
   const [coins, setCoins] = useState<WalletCoin[]>([]);
   const [loading, setLoading] = useState(false);

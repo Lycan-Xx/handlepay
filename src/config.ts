@@ -6,6 +6,8 @@
 import type { BchNetwork } from "./lib/network";
 
 export const SITE = {
+  /** The live app. Used where an outside party must fetch something from us whatever page we run on. */
+  url: "https://handlepay.lycanforge.com.ng",
   source: "https://github.com/Lycan-Xx/handlepay",
   /** Pitch slides; empty until they're published. */
   slides: "",

@@ -127,7 +127,7 @@ pre.addr { white-space: pre-wrap; margin: 8px 0 0; }
 .pill {
   display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 4px 12px;
   background: var(--surface); color: var(--ink); border: 1px solid var(--line2); border-radius: 999px;
-  font-size: 0.85rem; font-weight: 600;
+  font-size: 0.85rem; font-weight: 600; white-space: nowrap;
 }
 .pill:hover:not(:disabled) { background: var(--surface2); }
 .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--net-main); flex: none; }
@@ -307,6 +307,14 @@ label.memo input { font-size: 0.95rem; }
 /* ---------- QR block: white ground and a quiet zone, so any scanner reads it ---------- */
 .qr { background: #fff; padding: 8px; border-radius: 8px; border: 1px solid var(--line); max-width: 100%; flex: none; }
 .qr svg { display: block; width: 100%; height: auto; }
+/* Wallet pairing code: HandlePay's logo over the centre, on a white pad so it never touches a module.
+   About 20% of the width, so it hides far less than the 30% error correction H can recover. */
+.pair-qr { position: relative; width: min(300px, 100%); margin: 16px auto 4px; }
+.pair-qr .qr { width: 100%; padding: 0; border-color: var(--line); }
+.pair-qr-logo {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 20%; height: auto; padding: 4px; background: #fff; border-radius: 10px; box-sizing: content-box;
+}
 
 /* ---------- Header controls ---------- */
 .shell > .top { padding: 6px 0 4px; }
