@@ -18,7 +18,6 @@ import {
   type FakeClaimResult,
   type TamperedLink,
 } from "../lib/attack";
-import { useTone } from "../hooks/useTone";
 import type { BchNetwork } from "../lib/network";
 import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
 import { navigate } from "../lib/router";
@@ -39,8 +38,6 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
   const [run, setRun] = useState<Run | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attemptView, setAttemptView] = useState<"noProof" | "replay">("noProof");
-  // Green while checking the real name, amber once Mallory's attempts are on screen.
-  useTone(run?.fake ? "amber" : "ok");
 
   useEffect(() => {
     let cancelled = false;
@@ -134,7 +131,7 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
       </section>
 
       <h3 className="section">The real name</h3>
-      <VerifyCard handle={victimHandle} network={network} resolution={run?.victim ?? null} error={error} onRetry={() => rerun(victimHandle)} wash={false} />
+      <VerifyCard handle={victimHandle} network={network} resolution={run?.victim ?? null} error={error} onRetry={() => rerun(victimHandle)} />
 
       {run && run.victim.status !== "verified" && (
         <p className="warn">
@@ -162,7 +159,7 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
               Reuse {victimName}'s proof
             </button>
           </div>
-          <VerifyCard handle={MALLORY_HANDLE} network={network} resolution={attemptView === "noProof" ? run.fake.noProof : run.fake.replay} wash={false} />
+          <VerifyCard handle={MALLORY_HANDLE} network={network} resolution={attemptView === "noProof" ? run.fake.noProof : run.fake.replay} />
           {attemptView === "replay" && (
             <p className="muted small">
               The proof really was paid from that address, but it names {victimName}'s Nostr key, not Mallory's, and she

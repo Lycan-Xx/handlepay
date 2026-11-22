@@ -7,11 +7,12 @@
  * without colour. A Claimed or Changed address has no Copy button: an address
  * the name hasn't proven shouldn't be easy to take somewhere else.
  */
-import { useTone, type Tone } from "../hooks/useTone";
 import { explorerTx, type BchNetwork } from "../lib/network";
 import type { Resolution } from "../lib/resolve";
 import { navigate } from "../lib/router";
 import { CopyButton } from "./CopyButton";
+
+type Tone = "ok" | "amber" | "neutral" | "checking";
 
 const LOOK: Record<
   Resolution["status"],
@@ -54,10 +55,8 @@ export function VerifyCard(props: {
   /** Set when the lookup itself failed (network down, etc.). */
   error?: string | null;
   onRetry?: () => void;
-  /** Set the page's background glow from this card. Pages that show several cards turn it off on all but one. */
-  wash?: boolean;
 }) {
-  const { handle, network, resolution, error, onRetry, wash = true } = props;
+  const { handle, network, resolution, error, onRetry } = props;
   const [local, domain] = splitHandle(resolution?.handle?.full ?? handle);
   // The resolver reports an unreachable domain as Not found with the reason in the first check's detail.
   // That is a failure to check, not proof the name doesn't exist, so it gets the "Couldn't check" card.
@@ -66,7 +65,6 @@ export function VerifyCard(props: {
     resolution?.status === "not_found" && first?.id === "nip05" && !first.ok && !!first.detail && first.detail !== "Name not listed";
   const failure = error ?? (unreachable ? (resolution?.reason ?? null) : null);
   const tone: Tone = resolution && !unreachable ? LOOK[resolution.status].tone : failure ? "neutral" : "checking";
-  useTone(wash ? tone : null);
 
   const nameBlock = (
     <>

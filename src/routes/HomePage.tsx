@@ -6,12 +6,9 @@
  */
 import { TourStrip } from "../components/Tour";
 import { DEMO_PAYEE } from "../config";
-import { useTone } from "../hooks/useTone";
 import { navigate } from "../lib/router";
 
 export function HomePage() {
-  useTone("ok");
-
   const go = (href: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     navigate(href);
