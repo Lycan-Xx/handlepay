@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { buildRevokeEvent } from "../src/lib/binding";
 import {
   Nip05UnreachableError,
+  RelaysUnreachableError,
+  reachableRelays,
   dedupeVerified,
   fetchNip05,
   newest,
@@ -127,5 +129,22 @@ describe("relay helpers", () => {
     const b = finalizeEvent(buildRevokeEvent(2), key.secretKey);
     expect(newest([a, b])?.id).toBe(b.id);
     expect(newest([])).toBeUndefined();
+  });
+});
+
+describe("reachableRelays", () => {
+  const pool = (up: string[]) => ({
+    ensureRelay: async (url: string) => {
+      if (!up.includes(url)) throw new Error("connection failed");
+      return {};
+    },
+  });
+
+  it("keeps only the relays that accept a connection", async () => {
+    expect(await reachableRelays(pool(["wss://b"]), ["wss://a", "wss://b", "wss://c"], 1000)).toEqual(["wss://b"]);
+  });
+
+  it("throws RelaysUnreachableError, not an empty answer, when none connect", async () => {
+    await expect(reachableRelays(pool([]), ["wss://a", "wss://b"], 1000)).rejects.toBeInstanceOf(RelaysUnreachableError);
   });
 });

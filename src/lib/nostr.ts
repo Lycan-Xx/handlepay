@@ -123,12 +123,39 @@ export function relaysFor(extra: string[] = []): string[] {
   return [...new Set([...extra, ...DEFAULT_RELAYS].map((r) => r.replace(/\/$/, "")))];
 }
 
+/** No relay could be reached, so an empty answer would mean "couldn't check", not "nothing published". */
+export class RelaysUnreachableError extends Error {
+  constructor() {
+    super("Couldn't reach any Nostr relay to read this name's records. Check your connection and try again.");
+    this.name = "RelaysUnreachableError";
+  }
+}
+
+/**
+ * The relays that accept a connection. querySync answers [] both when relays have nothing and when
+ * none can be reached; connecting first tells the two apart, so a dead connection reads as
+ * "couldn't check", never as "no identity". Throws RelaysUnreachableError when none connect.
+ */
+export async function reachableRelays(
+  p: { ensureRelay(url: string, params?: { connectionTimeout?: number }): Promise<unknown> },
+  relays: string[],
+  timeout: number,
+): Promise<string[]> {
+  const connected = await Promise.allSettled(relays.map((url) => p.ensureRelay(url, { connectionTimeout: timeout })));
+  const ok = relays.filter((_, i) => connected[i].status === "fulfilled");
+  if (!ok.length) throw new RelaysUnreachableError();
+  return ok;
+}
+
 /**
  * Fetch a pubkey's identity events (binding, payto, Paytaca) from relays.
  * Drops anything with a bad signature or a different author.
+ *
+ * Throws RelaysUnreachableError when not one relay can be connected to.
  */
 export async function queryIdentityEvents(pubkey: string, relays: string[], maxWait = 4_000): Promise<NostrEvent[]> {
   const p = getPool();
+  relays = await reachableRelays(p, relays, maxWait);
   const results = await Promise.all([
     p.querySync(relays, { authors: [pubkey], kinds: [BINDING_KIND], "#d": [BINDING_D] }, { maxWait }),
     p.querySync(relays, { authors: [pubkey], kinds: [PAYTO_KIND] }, { maxWait }),
