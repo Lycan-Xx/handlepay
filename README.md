@@ -85,7 +85,12 @@ node scripts/smoke-names.mjs https://your-site.example   # claims and releases a
 ## Use the resolver in your own app
 
 [`packages/resolve`](packages/resolve) is the same verification code the app uses,
-packaged as `@handlepay/resolve`:
+published on npm as [`@handlepay/resolve`](https://www.npmjs.com/package/@handlepay/resolve).
+Any BCH wallet or shop can run the same three-link check before paying a name:
+
+```sh
+npm install @handlepay/resolve
+```
 
 ```ts
 import { resolve } from "@handlepay/resolve";
