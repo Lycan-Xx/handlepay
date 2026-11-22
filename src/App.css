@@ -242,8 +242,35 @@ label.memo input { font-size: 0.95rem; }
 .facts dd { margin: 0; min-width: 0; word-break: break-word; }
 .facts code { display: block; font-size: 0.8rem; word-break: break-all; }
 
+/* ---------- Receipt: a document, orange used sparingly ---------- */
+.receipt-head { display: flex; align-items: center; gap: 14px; }
+.receipt-head h2 { margin: 0; font-size: 1.35rem; }
+.receipt-head p { margin: 2px 0 0; }
+.receipt .tick { margin: 0; flex: none; }
+.receipt .tick.pending { background: var(--surface2); color: var(--muted); }
+.receipt-verify { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 18px 0 4px; padding-top: 16px; border-top: 1px dashed var(--line2); }
+.receipt-verify p { flex: 1 1 200px; margin: 0; }
+.receipt-qr { width: 168px; }
+.print-only { display: none; }
+
 /* ---------- Transaction page ---------- */
 .mono-wrap { word-break: break-all; font-size: 0.85rem; font-family: var(--mono); }
+.proof-facts { list-style: none; padding: 0; margin: 14px 0 6px; display: grid; gap: 8px; }
+.proof-facts li {
+  display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--r-sm);
+  background: var(--surface2); border: 1px solid var(--line);
+}
+.proof-facts .pf-mark {
+  width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  font-size: 0.8rem; font-weight: 700; background: var(--surface); color: var(--muted); border: 1px solid var(--line2);
+}
+.proof-facts li.ok { background: var(--green-s); border-color: color-mix(in srgb, var(--ok) 30%, var(--line)); }
+.proof-facts li.ok .pf-mark { background: var(--green); color: #fff; border-color: var(--green); }
+.proof-facts li.wait { background: var(--amber-s); border-color: color-mix(in srgb, var(--warn) 30%, var(--line)); }
+.proof-facts li.wait .pf-mark { color: var(--amber); border-color: var(--warn); }
+.proof-facts li.bad { background: var(--red-s); border-color: color-mix(in srgb, var(--err) 30%, var(--line)); }
+.proof-facts li.bad .pf-mark { color: var(--red); border-color: var(--err); }
+.proof-facts b { font-weight: 650; word-break: break-word; }
 .io { list-style: none; padding: 0; margin: 0; }
 .io li {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 10px 0;
@@ -422,3 +449,23 @@ fieldset.plain { border: 0; padding: 0; margin: 0; min-width: 0; }
 .fund-qr { width: 168px; max-width: 100%; background: #fff; padding: 4px; border-radius: 8px; flex: none; }
 .fund-qr svg { display: block; width: 100%; height: auto; }
 .fund-body { flex: 1 1 220px; min-width: 0; }
+
+/* ---------- Print: only the receipt, as a plain document ("Save as PDF") ---------- */
+@media print {
+  @page { margin: 16mm; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .banner, .top, .lock-note, .foot, .no-print { display: none !important; }
+  .shell { max-width: none; padding: 0; }
+  /* On a page with a receipt, print only the receipt; other pages (like /tx) print as they are. */
+  main:has(> .receipt) > *:not(.receipt) { display: none !important; }
+  .card.receipt { border: 0; box-shadow: none; padding: 0; margin: 0; }
+  .print-only { display: block; }
+  span.print-only { display: inline; }
+  dt.print-only { display: block; }
+  .receipt .tick { border: 1px solid #000; background: #fff; color: #000; }
+  .facts { font-size: 10.5pt; }
+  .facts code { font-size: 9pt; }
+  .receipt-verify { break-inside: avoid; }
+  .receipt-qr { width: 40mm; border: 0; padding: 0; }
+  a { color: #000; text-decoration: none; }
+}

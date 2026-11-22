@@ -98,6 +98,7 @@ export function receiptText(r: Receipt, bch: (sats: bigint) => string): string {
     ...(r.memo ? [`Memo: ${r.memo}`] : []),
     `To address: ${r.address}`,
     `Network: ${r.network}`,
+    ...(r.fee !== undefined ? [`Network fee: ${r.fee} sats`] : []),
     `Transaction: ${r.txid}`,
     `Explorer: ${r.explorerUrl}`,
     `Time: ${new Date(r.at).toISOString()}`,

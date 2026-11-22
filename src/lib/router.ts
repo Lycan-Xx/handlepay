@@ -79,3 +79,14 @@ export function payPath(handle: string, params?: { amount?: string; memo?: strin
   const q = query.toString();
   return `/pay/${encodeURIComponent(handle).replace(/%40/g, "@")}${q ? `?${q}` : ""}`;
 }
+
+/**
+ * Path for the public transaction page. `name` asks /tx to re-check that the
+ * name still resolves to the address paid; without it, /tx shows only what
+ * the chain proves. Receipt links and receipt QR codes carry both.
+ */
+export function txPath(txid: string, network: BchNetwork, name?: string): string {
+  const query = new URLSearchParams({ network });
+  if (name) query.set("name", name);
+  return `/tx/${txid}?${query.toString().replace(/%40/g, "@")}`;
+}
