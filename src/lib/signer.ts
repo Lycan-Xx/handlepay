@@ -12,7 +12,8 @@
  */
 import type { EventTemplate, NostrEvent } from "nostr-tools/pure";
 import { finalizeEvent, generateSecretKey, getPublicKey } from "nostr-tools/pure";
-import { decode, nsecEncode } from "nostr-tools/nip19";
+import { decode, npubEncode, nsecEncode } from "nostr-tools/nip19";
+import { decrypt as nip49Decrypt, encrypt as nip49Encrypt } from "nostr-tools/nip49";
 import { hasSigner, signWithExtension, signerPubkey, verifySignature } from "./nostr";
 
 export type SignerKind = "extension" | "browser";
@@ -67,16 +68,27 @@ export function createBrowserKey(): string {
   return getPublicKey(secret);
 }
 
+/** True for a NIP-49 password-encrypted key (`ncryptsec1…`), which needs its password to restore. */
+export const isEncryptedKey = (input: string) => input.trim().toLowerCase().startsWith("ncryptsec1");
+
 /**
- * Keep a key from a backup: an `nsec1…` string or 64 hex characters.
+ * Keep a key from a backup: an `nsec1…` string, 64 hex characters, or a
+ * NIP-49 `ncryptsec1…` string with its `password`.
  *
  * Replacing a *different* key already saved here needs `replace: true`, because that
  * key may be the only way to control a name the person has claimed.
  */
-export function importBrowserKey(input: string, opts: { replace?: boolean } = {}): string {
+export function importBrowserKey(input: string, opts: { replace?: boolean; password?: string } = {}): string {
   const text = input.trim();
   let secret: Uint8Array;
-  if (HEX64.test(text.toLowerCase())) {
+  if (isEncryptedKey(text)) {
+    if (!opts.password) throw new Error("This backup is encrypted. Enter the password you chose when you saved it.");
+    try {
+      secret = nip49Decrypt(text.toLowerCase(), opts.password);
+    } catch {
+      throw new Error("That password doesn't open this backup, or the backup is damaged.");
+    }
+  } else if (HEX64.test(text.toLowerCase())) {
     secret = fromHex(text.toLowerCase());
   } else {
     try {
@@ -84,7 +96,9 @@ export function importBrowserKey(input: string, opts: { replace?: boolean } = {}
       if (decoded.type !== "nsec") throw new Error("not an nsec");
       secret = decoded.data;
     } catch {
-      throw new Error("That doesn't look like a secret key. It should start with nsec1 or be 64 letters and numbers.");
+      throw new Error(
+        "That doesn't look like a secret key. It should start with nsec1 or ncryptsec1, or be 64 letters and numbers.",
+      );
     }
   }
   const existing = browserKeyPubkey();
@@ -99,6 +113,29 @@ export function importBrowserKey(input: string, opts: { replace?: boolean } = {}
 export function exportBrowserKey(): string | null {
   const secret = readSecret();
   return secret ? nsecEncode(secret) : null;
+}
+
+/** The shortest password accepted for an encrypted backup. */
+export const BACKUP_PASSWORD_MIN = 8;
+
+/**
+ * The key encrypted with `password` (NIP-49, `ncryptsec1…`), for a backup that
+ * is safer to keep in ordinary storage. Runs entirely in this browser; scrypt
+ * makes it take about a second, which is the point. `logn` is lowered only in
+ * tests.
+ */
+export function exportBrowserKeyEncrypted(password: string, logn = 16): string | null {
+  if (password.length < BACKUP_PASSWORD_MIN) {
+    throw new Error(`Use a password of at least ${BACKUP_PASSWORD_MIN} characters.`);
+  }
+  const secret = readSecret();
+  return secret ? nip49Encrypt(secret, password, logn) : null;
+}
+
+/** The public key of the key kept in this browser as `npub1…`, for backup files. */
+export function browserKeyNpub(): string | null {
+  const pub = browserKeyPubkey();
+  return pub ? npubEncode(pub) : null;
 }
 
 function browserSigner(): Signer {
