@@ -27,6 +27,10 @@ export interface ResolveOptions {
  * and checks the BCH proof transaction from raw bytes. Pay `address` only
  * when `status` is "verified" (or after your user has confirmed a "claimed"
  * or "changed" result, as the app does).
+ *
+ * Rejects, rather than returning "not_found", when it can't check: no Nostr
+ * relay could be reached (RelaysUnreachableError) or the BCH server didn't
+ * answer. A name you couldn't check isn't a name that doesn't exist.
  */
 export async function resolve(name: string, options: ResolveOptions = {}): Promise<Resolution> {
   const network = options.network ?? "mainnet";
@@ -53,7 +57,7 @@ export {
 } from "../../../src/lib/binding";
 export type { Check, ParsedBinding, ProofInput } from "../../../src/lib/binding";
 
-export { DEFAULT_RELAYS, fetchNip05, parseHandle, queryIdentityEvents } from "../../../src/lib/nostr";
+export { DEFAULT_RELAYS, RelaysUnreachableError, fetchNip05, parseHandle, queryIdentityEvents } from "../../../src/lib/nostr";
 export type { Handle, Nip05Result } from "../../../src/lib/nostr";
 
 export { AUTH_KIND, AUTH_MAX_AGE_SEC, buildAuthTemplate, createChallenge, verifyAuthEvent } from "../../../src/lib/auth";

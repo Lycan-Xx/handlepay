@@ -1,6 +1,6 @@
 {
   "name": "@handlepay/resolve",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Resolve a name like sani@lycanforge.com.ng to the Bitcoin Cash address it has proven it controls (HPAY-BIND v1: NIP-05 + signed Nostr binding + BCH proof transaction).",
   "type": "module",
   "main": "./dist/index.js",

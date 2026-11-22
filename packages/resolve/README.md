@@ -38,6 +38,25 @@ Works in browsers and in Node 22 or later, which has built-in `fetch` and `WebSo
 In a browser, some domains block cross-origin NIP-05 requests; pass a proxy through
 `fetchNip05`, or set `VITE_NIP05_PROXY` in a Vite app.
 
+## When it can't check
+
+`resolve` returns `not_found` only when the name really has no identity. If it can't find out,
+because no Nostr relay could be reached or the BCH server didn't answer, it **rejects** instead,
+so a dead connection is never shown as "this name doesn't exist":
+
+```ts
+import { resolve, RelaysUnreachableError } from "@handlepay/resolve";
+
+try {
+  const r = await resolve(name);
+  // ...handle r.status as above
+} catch (e) {
+  // Not "this name doesn't exist": offer "Try again".
+  if (e instanceof RelaysUnreachableError) console.log("No Nostr relay answered. Try again.");
+  else console.log("Couldn't check this name:", (e as Error).message); // e.g. the BCH server didn't answer
+}
+```
+
 ## What "verified" means
 
 Three facts that point at each other:
@@ -74,6 +93,7 @@ if (r.status === "changed") warnUser(r.previous, r.address);
 | `proofOpReturnChunks`, `parseProofOutput` | Write and read the `OP_RETURN "HPAY" 01 <pubkey>` proof output |
 | `createChallenge`, `buildAuthTemplate`, `verifyAuthEvent` | Sign-in with a name (challenge–response, kind 22242) |
 | `parseHandle`, `fetchNip05`, `queryIdentityEvents` | The lower-level lookups |
+| `RelaysUnreachableError` | Thrown when no Nostr relay can be reached (since 0.2.0) |
 
 ## License
 
