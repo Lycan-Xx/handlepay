@@ -34,15 +34,20 @@ call it Verified if they haven't.
 2. **First visit has no memory.** "Changed" only protects someone who has visited the name
    before; the memory is in that browser. A stolen Nostr key or hijacked domain can fool a
    first-time payer if the attacker also makes a real proof. This is in the threat model.
-3. **Only one name is live on each network.** Two demo names exist. Anyone else has to set
-   up their own, which takes a domain, a Nostr extension and a wallet.
+3. **Only two demo names are fully Verified.** Anyone can now claim a free
+   `name@handlepay.lycanforge.com.ng` with only a wallet (no domain, no extension; the key is
+   made in the browser). A new free name becomes Verified only after its owner sends the
+   proof transaction from their wallet, and that full run has not been tested end to end. A
+   free name's key lives only in that browser unless backed up. Limits: 3 to 24 characters,
+   3 names per key, 10 writes per network address per hour.
 4. **Payers need a WizardConnect wallet** (Paytaca, Cashonize or Selene), and the
    wallet must be set to the same network. Other BCH wallets can't pay through the page.
    Per the handoff notes, only Paytaca has paid on mainnet so far.
 5. **Payments can't be reversed.** On mainnet they are real money. The page says so.
 6. **A bound address is public and reused**, so payments to it can be linked. Noted as
    future work.
-7. **No vault, no hosted names, no NIP-46 remote signing yet.** Don't imply them. The XO
+7. **No vault and no NIP-46 remote signing yet.** Don't imply them. (Hosted free names
+   exist; see item 3.) The XO
    vault notes in the repo mention a HandlePay vault; the web app has none.
 8. **Event kind 30145 is a placeholder**, not an agreed standard.
 
