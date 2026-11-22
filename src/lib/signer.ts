@@ -67,8 +67,13 @@ export function createBrowserKey(): string {
   return getPublicKey(secret);
 }
 
-/** Keep a key from a backup: an `nsec1…` string or 64 hex characters. */
-export function importBrowserKey(input: string): string {
+/**
+ * Keep a key from a backup: an `nsec1…` string or 64 hex characters.
+ *
+ * Replacing a *different* key already saved here needs `replace: true`, because that
+ * key may be the only way to control a name the person has claimed.
+ */
+export function importBrowserKey(input: string, opts: { replace?: boolean } = {}): string {
   const text = input.trim();
   let secret: Uint8Array;
   if (HEX64.test(text.toLowerCase())) {
@@ -81,6 +86,10 @@ export function importBrowserKey(input: string): string {
     } catch {
       throw new Error("That doesn't look like a secret key. It should start with nsec1 or be 64 letters and numbers.");
     }
+  }
+  const existing = browserKeyPubkey();
+  if (existing && existing !== getPublicKey(secret) && !opts.replace) {
+    throw new Error("This browser already has a different key saved. Back it up first if it holds a name, then tick the box to replace it.");
   }
   writeSecret(secret);
   return getPublicKey(secret);

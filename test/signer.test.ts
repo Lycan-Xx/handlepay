@@ -88,6 +88,24 @@ describe("browser key", () => {
     expect(importBrowserKey(`  ${hex.toUpperCase()}  `)).toBe(pub);
   });
 
+  it("won't silently replace a different saved key, but allows it when asked, and allows the same key again", () => {
+    const first = createBrowserKey();
+    const exported = exportBrowserKey()!;
+    // Make a second, different key to try to import over it.
+    const data2 = installStorage();
+    const second = createBrowserKey();
+    const secondNsec = exportBrowserKey()!;
+    const secondHex = [...data2.values()][0];
+    installStorage();
+    importBrowserKey(exported); // first key saved again
+    expect(browserKeyPubkey()).toBe(first);
+    expect(() => importBrowserKey(secondNsec)).toThrow(/different key saved/);
+    expect(browserKeyPubkey()).toBe(first);
+    expect(importBrowserKey(exported)).toBe(first); // the same key is fine
+    expect(importBrowserKey(secondHex, { replace: true })).toBe(second);
+    expect(browserKeyPubkey()).toBe(second);
+  });
+
   it("rejects things that aren't secret keys", () => {
     for (const bad of ["", "hello", "npub1qqqqqq", "nsec1notvalid", "ab".repeat(31), "zz".repeat(32)]) {
       expect(() => importBrowserKey(bad), JSON.stringify(bad)).toThrow(/secret key/);

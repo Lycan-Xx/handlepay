@@ -309,6 +309,11 @@ a.door:hover { border-color: var(--green); }
 .journey .rail { margin: 10px 0 4px; }
 .journey-kicker { margin: 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
 .journey-hint { margin: 6px 0 0; font-size: 0.92rem; color: var(--ink); }
+.keychoice { margin-top: 12px; padding: 12px 14px; border: 1px dashed var(--line2); border-radius: 12px; }
+.keychoice .label { margin-top: 0; }
+.keychoice details { margin-top: 10px; }
+.checkrow { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; font-size: 0.88rem; }
+.checkrow input { width: auto; margin: 3px 0 0; flex: none; }
 .needlist { margin: 6px 0; padding-left: 20px; }
 .needlist li { margin: 3px 0; }
 .foot { margin-top: 20px; text-align: center; }

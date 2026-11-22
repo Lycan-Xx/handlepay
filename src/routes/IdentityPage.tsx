@@ -1,8 +1,11 @@
 /**
  * /identity: set up a name to be paid at, in three steps, then manage it.
  *
- * 1. Name and Nostr key: connect the Nostr extension and check that the
- *    name's domain lists that key (with the nostr.json line to add if not).
+ * 1. Name and key. Two ways to get a name: a free one on HandlePay's domain
+ *    (pick a name, make or connect a key, claim it, no domain needed), or one on
+ *    your own domain (the page shows the nostr.json file to host). The key is
+ *    either a Nostr extension or one kept in this browser. Either way the page
+ *    then checks that the name's domain lists that key.
  * 2. Wallet: connect the wallet to be paid in; its first receive address is
  *    the one that gets bound, and it needs a few thousand sats for the proof.
  * 3. Proof and publish: a transaction from that address to itself carrying
@@ -20,15 +23,17 @@ import { VerifyCard } from "../components/VerifyCard";
 import type { Wallet } from "../hooks/useWallet";
 import { buildBindingEvent, buildPaytoEvent, buildRevokeEvent, proofOpReturnChunks } from "../lib/binding";
 import { explorerTx, getTransaction, type BchNetwork } from "../lib/network";
+import { HOSTED_DOMAIN, hostedHandle, isHostedHandle, lookupName, claimName, releaseName, HostedError, type Availability } from "../lib/hosted";
+import { checkLocalName } from "../lib/hostedRules";
+import { DEFAULT_RELAYS, fetchNip05, hasSigner, parseHandle, publishEvent } from "../lib/nostr";
 import {
-  DEFAULT_RELAYS,
-  fetchNip05,
-  hasSigner,
-  parseHandle,
-  publishEvent,
-  signWithExtension,
-  signerPubkey,
-} from "../lib/nostr";
+  createBrowserKey,
+  exportBrowserKey,
+  hasBrowserKey,
+  importBrowserKey,
+  signerFor,
+  type SignerKind,
+} from "../lib/signer";
 import { diagnoseNip05, type Nip05Diagnosis } from "../lib/nip05diagnose";
 import { paymentErrorMessage } from "../lib/paylink";
 import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
@@ -41,6 +46,8 @@ const PROOF_MIN_SATS = 2_000n;
 interface Progress {
   name: string;
   pubkey?: string;
+  /** Which signer holds `pubkey`: a Nostr extension or the key kept in this browser. Older saves have none, meaning extension. */
+  signer?: SignerKind;
   proof?: { address: string; pubkey: string; txid: string };
   /** Set once the binding for `proof` is on relays. */
   publishedTxid?: string;
@@ -75,6 +82,13 @@ type NameCheck =
 
 const short = (s: string) => `${s.slice(0, 10)}…${s.slice(-6)}`;
 
+/** Worded for the Nostr and name steps; paymentErrorMessage's "Payment cancelled in your wallet" would be wrong here. */
+function nostrErrorMessage(e: unknown): string {
+  const message = e instanceof Error ? e.message : String(e);
+  if (!(e instanceof HostedError) && /reject|denied|declin|cancel/i.test(message)) return "Cancelled in your Nostr extension. Nothing changed.";
+  return message;
+}
+
 export function IdentityPage({ wallet, network }: { wallet: Wallet; network: BchNetwork }) {
   const { wc, connected, restoring, connect, receiveAddress, coins, refresh } = wallet;
   const [progress, setProgressState] = useState<Progress>(() => load(network));
@@ -87,6 +101,14 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
   const [error, setError] = useState<string | null>(null);
   const [confirmRevoke, setConfirmRevoke] = useState(false);
   const [copied, setCopied] = useState(false);
+  // "free": a name on HandlePay's domain. "domain": the person's own. A name set up before decides which one to show.
+  const [mode, setMode] = useState<"free" | "domain">(!progress.name || isHostedHandle(progress.name) ? "free" : "domain");
+  const [localInput, setLocalInput] = useState(isHostedHandle(progress.name) ? progress.name.split("@")[0] : "");
+  const [avail, setAvail] = useState<Availability | null>(null);
+  const [backup, setBackup] = useState<string | null>(null);
+  const [importText, setImportText] = useState("");
+  const [replaceOk, setReplaceOk] = useState(false);
+  const [confirmRelease, setConfirmRelease] = useState(false);
 
   const setProgress = (next: Progress) => {
     setProgressState(next);
@@ -131,6 +153,30 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
     // handle is derived from progress.name
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nameCheck.state, progress.name, lookups]);
+
+  // The name the form currently describes: a free one is built from the short name typed.
+  const wantedName = mode === "free" ? (checkLocalName(localInput).ok ? hostedHandle(localInput) : "") : nameInput.trim().toLowerCase();
+  const wantedHosted = mode === "free";
+  const signerKind: SignerKind = progress.signer ?? "extension";
+
+  // Free names: is the one being typed free? (Debounced; cheap, and it's the same data the NIP-05 file shows.)
+  useEffect(() => {
+    setAvail(null);
+    if (mode !== "free" || !localInput.trim()) return;
+    const checked = checkLocalName(localInput);
+    if (!checked.ok) {
+      setAvail({ state: "invalid", message: checked.message });
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      lookupName(checked.name, pubkey).then((r) => !cancelled && setAvail(r));
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [mode, localInput, pubkey, nameCheck.state]);
 
   const step1Done = nameCheck.state === "ok";
   const bindAddress = receiveAddress;
@@ -222,31 +268,82 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [published, progress.name, network, confirmations === 0 ? 0 : 1, lookups]);
 
-  const run = async (label: string, fn: () => Promise<void>) => {
+  const run = async (label: string, fn: () => Promise<void>, kind: "pay" | "nostr" = "pay") => {
     setBusy(label);
     setError(null);
     try {
       await fn();
     } catch (e) {
-      setError(paymentErrorMessage(e, false, network));
+      setError(kind === "pay" ? paymentErrorMessage(e, false, network) : nostrErrorMessage(e));
     } finally {
       setBusy(null);
     }
   };
 
-  const connectNostr = () =>
-    run("nostr", async () => {
-      const key = await signerPubkey();
-      setProgress({ ...progress, name: nameInput.trim().toLowerCase(), pubkey: key });
-    });
+  /** Pick the key for this name: make or reuse the browser key, or ask the extension. */
+  const chooseKey = (kind: SignerKind) =>
+    run(
+      "key",
+      async () => {
+        if (!parseHandle(wantedName)) throw new Error("Pick a name first.");
+        if (kind === "browser" && !hasBrowserKey()) createBrowserKey();
+        const key = await signerFor(kind).pubkey();
+        setProgress({ ...progress, name: wantedName, pubkey: key, signer: kind });
+      },
+      "nostr",
+    );
+
+  /** Put a backed-up browser key back, then use it. */
+  const restoreKey = () =>
+    run(
+      "key",
+      async () => {
+        importBrowserKey(importText, { replace: replaceOk });
+        setImportText("");
+        setReplaceOk(false);
+        const key = await signerFor("browser").pubkey();
+        setProgress({ ...progress, name: wantedName, pubkey: key, signer: "browser" });
+      },
+      "nostr",
+    );
+
+  /** Claim the free name for this key; the page then re-checks the name like any other. */
+  const claim = () =>
+    run(
+      "claim",
+      async () => {
+        if (!handle || !pubkey) return;
+        await claimName(handle.local, signerFor(signerKind));
+        setLookups((n) => n + 1);
+      },
+      "nostr",
+    );
+
+  /** Give the free name back so anyone can claim it. Clears the name here too. */
+  const release = () =>
+    run(
+      "release",
+      async () => {
+        if (!handle) return;
+        await releaseName(handle.local, signerFor(signerKind));
+        setConfirmRelease(false);
+        setLocalInput("");
+        setProgress({ name: "", pubkey, signer: progress.signer });
+      },
+      "nostr",
+    );
 
   const sendProof = () =>
     run("proof", async () => {
       if (!pubkey || !bindAddress || !wc.manager) return;
-      // The proof writes the key on chain for good; make sure it's still the one in the extension.
-      if ((await signerPubkey()) !== pubkey) {
+      // The proof writes the key on chain for good; make sure it's still the key that holds this name.
+      if ((await signerFor(signerKind).pubkey()) !== pubkey) {
         setProgress({ ...progress, pubkey: undefined });
-        throw new Error("Your Nostr extension now holds a different key. Connect it again.");
+        throw new Error(
+          signerKind === "browser"
+            ? "The key saved in this browser isn't the one for this name. Restore your backup, then try again."
+            : "Your Nostr extension now holds a different key. Connect it again.",
+        );
       }
       const { txid } = await sendBch({
         manager: wc.manager,
@@ -271,22 +368,22 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
         buildPaytoEvent(proofHere.address),
       ];
       for (const t of templates) {
-        const event = await signWithExtension(t, proofHere.pubkey);
+        const event = await signerFor(signerKind).sign(t, proofHere.pubkey);
         const result = await publishEvent(event, DEFAULT_RELAYS);
         if (result.ok.length === 0) throw new Error("No relay accepted it. Check your connection and try again.");
       }
       setProgress({ ...progress, publishedTxid: proofHere.txid });
-    });
+    }, "nostr");
 
   const revoke = () =>
     run("revoke", async () => {
       if (!pubkey) return;
-      const event = await signWithExtension(buildRevokeEvent(), pubkey);
+      const event = await signerFor(signerKind).sign(buildRevokeEvent(), pubkey);
       const result = await publishEvent(event, DEFAULT_RELAYS);
       if (result.ok.length === 0) throw new Error("No relay accepted it. Check your connection and try again.");
       setConfirmRevoke(false);
       setProgress({ ...progress, publishedTxid: undefined });
-    });
+    }, "nostr");
 
   const payLink = handle ? `${window.location.origin}${payPath(handle.full, { network })}` : "";
   const copyLink = async () => {
@@ -322,19 +419,28 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
         </p>
         {!step1Done && (
           <div className="need">
-            <strong>Before you start, have these ready:</strong>
+            <strong>{mode === "free" ? "All you need is a wallet:" : "Before you start, have these ready:"}</strong>
             <ul className="needlist">
-              <li>
-                <strong>A domain</strong> you can add one small file to (we show you the file).
-              </li>
-              <li>
-                <strong>A Nostr extension</strong> in your browser, like nos2x or Alby, for the name's key.
-              </li>
+              {mode === "domain" && (
+                <li>
+                  <strong>A domain</strong> you can add one small file to (we show you the file).
+                </li>
+              )}
+              {mode === "domain" && (
+                <li>
+                  <strong>A Nostr key</strong>: a browser extension like nos2x or Alby, or we can make one for you.
+                </li>
+              )}
               <li>
                 <strong>A BCH wallet</strong> (Paytaca, Cashonize or Selene) with a few cents on{" "}
-                {network === "mainnet" ? "mainnet (real money)" : "chipnet (practice coins)"}.
+                {network === "mainnet" ? "mainnet (real money)" : "chipnet (practice coins)"}. You'll use it at step 2.
               </li>
             </ul>
+            {mode === "free" && (
+              <p className="small">
+                No domain and no extension needed. We give you a free name and make the key that goes with it.
+              </p>
+            )}
             <p className="small">
               Not ready? Switch to practice coins with the network button at the top, or{" "}
               <a
@@ -360,7 +466,9 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
           published
             ? "Your name is live. Share the pay link below."
             : currentStep === 1
-              ? "Choose your name and connect your Nostr key, then put the file on your domain."
+              ? mode === "free"
+                ? "Pick a free name, make your key, and claim it. About a minute."
+                : "Choose your name and connect your Nostr key, then put the file on your domain."
               : currentStep === 2
                 ? "Connect the wallet that should receive the money."
                 : "Send the small proof payment, then publish. This is what makes the name trustworthy."
@@ -370,39 +478,189 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
       {/* Step 1 */}
       <section className={`card step ${currentStep === 1 ? "current" : ""} ${step1Done ? "finished" : ""}`}>
         <h2>
-          <span className="step-no">1</span> Your name and Nostr key {step1Done && <span className="done">✓</span>}
+          <span className="step-no">1</span> Your name and key {step1Done && <span className="done">✓</span>}
         </h2>
-        <label>
-          Your name
-          <input
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            placeholder="you@yourdomain.com"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-          />
-        </label>
-        {!hasSigner() ? (
-          <p className="warn">No Nostr extension found. Install nos2x or Alby, then reload this page.</p>
-        ) : !pubkey || nameInput.trim().toLowerCase() !== progress.name ? (
-          <button onClick={connectNostr} disabled={!parseHandle(nameInput) || !!busy}>
-            {busy === "nostr" ? "Approve in your Nostr extension…" : pubkey ? "Use this name" : "Connect Nostr extension"}
-          </button>
+
+        {!step1Done && (
+          <div className="net" role="group" aria-label="Where your name lives" style={{ marginBottom: 12 }}>
+            <button className={mode === "free" ? "on" : ""} aria-pressed={mode === "free"} onClick={() => setMode("free")}>
+              Free name
+            </button>
+            <button className={mode === "domain" ? "on" : ""} aria-pressed={mode === "domain"} onClick={() => setMode("domain")}>
+              My own domain
+            </button>
+          </div>
+        )}
+
+        {mode === "free" ? (
+          <>
+            <label>
+              Pick your name
+              <input
+                value={localInput}
+                onChange={(e) => setLocalInput(e.target.value)}
+                placeholder="yourname"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                maxLength={30}
+              />
+            </label>
+            <p className="muted small">
+              {localInput.trim() && checkLocalName(localInput).ok ? (
+                <>
+                  Your name will be <strong>{hostedHandle(localInput)}</strong>
+                </>
+              ) : (
+                <>It will end in @{HOSTED_DOMAIN}. Use 3 to 24 lowercase letters, numbers, - or _.</>
+              )}
+            </p>
+            {localInput.trim() && avail?.state === "available" && (
+              <p className="note green">
+                <strong>{hostedHandle(localInput)}</strong> is free.
+              </p>
+            )}
+            {localInput.trim() && avail?.state === "yours" && <p className="note green">This name is already yours.</p>}
+            {localInput.trim() && avail && "message" in avail && (
+              <p className="warn">{avail.message}</p>
+            )}
+          </>
+        ) : (
+          <label>
+            Your name
+            <input
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="you@yourdomain.com"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+          </label>
+        )}
+
+        {!pubkey || wantedName !== progress.name ? (
+          pubkey && wantedName !== progress.name ? (
+            <button onClick={() => chooseKey(signerKind)} disabled={!parseHandle(wantedName) || !!busy || (wantedHosted && avail?.state === "invalid")}>
+              Use this name
+            </button>
+          ) : (
+            <div className="keychoice">
+              <p className="label">Your name's key</p>
+              <p className="muted small">
+                A key is what proves a name is yours. We can make one in this browser, or you can use one you already have.
+              </p>
+              <div className="strip-actions">
+                <button
+                  onClick={() => chooseKey("browser")}
+                  disabled={!parseHandle(wantedName) || !!busy || (wantedHosted && avail?.state === "invalid")}
+                >
+                  {busy === "key" ? "Working…" : hasBrowserKey() ? "Use the key saved in this browser" : "Make a key for me"}
+                </button>
+                {hasSigner() && (
+                  <button
+                    className="ghost"
+                    onClick={() => chooseKey("extension")}
+                    disabled={!parseHandle(wantedName) || !!busy || (wantedHosted && avail?.state === "invalid")}
+                  >
+                    Use my Nostr extension
+                  </button>
+                )}
+              </div>
+              <details className="how">
+                <summary>I have a backed-up key</summary>
+                <label>
+                  Secret key (starts with nsec1)
+                  <input
+                    value={importText}
+                    onChange={(e) => setImportText(e.target.value)}
+                    placeholder="nsec1…"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    type="password"
+                  />
+                </label>
+                {hasBrowserKey() && (
+                  <label className="checkrow">
+                    <input type="checkbox" checked={replaceOk} onChange={(e) => setReplaceOk(e.target.checked)} />
+                    <span>Replace the key already saved in this browser. I've backed it up.</span>
+                  </label>
+                )}
+                <button className="ghost" onClick={restoreKey} disabled={!importText.trim() || !parseHandle(wantedName) || !!busy}>
+                  Restore and use this key
+                </button>
+              </details>
+            </div>
+          )
         ) : (
           <>
-            <p className="label">Your Nostr key</p>
+            <p className="label">Your key {progress.signer === "browser" ? "(saved in this browser)" : "(Nostr extension)"}</p>
             <div className="copyrow">
               <code className="addr">{pubkey}</code>
               <CopyButton text={pubkey} />
             </div>
+            {progress.signer === "browser" && (
+              <details className="how" open={!step1Done}>
+                <summary>Back up your key</summary>
+                <p className="small">
+                  This key is kept in this browser only. If you clear this site's data or switch devices, you lose control of
+                  the name and it can't be recovered. Copy the secret key somewhere safe, like a password manager. Anyone who
+                  has it can act as your name, so don't share it.
+                </p>
+                {backup ? (
+                  <div className="copyrow">
+                    <code className="addr">{backup}</code>
+                    <CopyButton text={backup} />
+                  </div>
+                ) : (
+                  <button className="ghost" onClick={() => setBackup(exportBrowserKey())}>
+                    Show my secret key
+                  </button>
+                )}
+              </details>
+            )}
             {nameCheck.state === "checking" && <p className="muted">Checking {handle?.domain}…</p>}
             {nameCheck.state === "ok" && (
               <p className="note green">
                 <strong>Found it.</strong> {handle?.domain} lists this key for {handle?.local}.
               </p>
             )}
-            {(nameCheck.state === "missing" || nameCheck.state === "other_key") && (
+            {mode === "free" && (nameCheck.state === "missing" || nameCheck.state === "other_key") && (
+              <>
+                {nameCheck.state === "missing" && avail?.state === "yours" && (
+                  <p className="muted">
+                    Claimed. It can take a few seconds to show up everywhere. Press Check again.
+                  </p>
+                )}
+                {nameCheck.state === "missing" && avail?.state !== "yours" && (!avail || avail.state === "available") && (
+                  <>
+                    <p className="muted">Nobody has this name yet. Claiming it ties it to the key above.</p>
+                    <button onClick={claim} disabled={!!busy || avail?.state !== "available"}>
+                      {busy === "claim" ? "Claiming…" : `Claim ${handle?.full}`}
+                    </button>
+                  </>
+                )}
+                {nameCheck.state === "missing" && avail?.state === "taken" && (
+                  <p className="warn">Someone else has {handle?.local}. Pick a different name above.</p>
+                )}
+                {nameCheck.state === "missing" && avail && (avail.state === "invalid" || avail.state === "unavailable") && (
+                  <p className="warn">{avail.message}</p>
+                )}
+                {nameCheck.state === "other_key" && (
+                  <>
+                    <p className="warn">
+                      {handle?.local} belongs to a different key than the one above. If it's your name, use the key you made it
+                      with; if not, pick another name above.
+                    </p>
+                    <button className="ghost" onClick={() => setProgress({ ...progress, pubkey: undefined })} disabled={!!busy}>
+                      Use a different key
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+            {mode === "domain" && (nameCheck.state === "missing" || nameCheck.state === "other_key") && (
               <>
                 <p className="warn">
                   {nameCheck.state === "missing"
@@ -475,6 +733,11 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
               </button>
             )}
           </>
+        )}
+        {error && currentStep === 1 && (
+          <p className="err" role="alert">
+            {error}
+          </p>
         )}
       </section>
 
@@ -588,7 +851,7 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
         )}
       </section>
 
-      {error && <p className="err">{error}</p>}
+      {error && currentStep !== 1 && <p className="err">{error}</p>}
 
       <details className="card how">
         <summary>Why is each step needed?</summary>
@@ -650,6 +913,32 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
                     Keep it
                   </button>
                 </div>
+              </>
+            )}
+            {isHostedHandle(handle.full) && (
+              <>
+                <hr />
+                <p className="muted small">
+                  Your name is a free HandlePay name. If you don't want it any more, give it back so someone else can use it.
+                  Payments to it stop working.
+                </p>
+                {!confirmRelease ? (
+                  <button className="ghost" onClick={() => setConfirmRelease(true)} disabled={!!busy}>
+                    Give up this name
+                  </button>
+                ) : (
+                  <>
+                    <p className="warn">{handle.full} will be free for anyone to claim. Give it up?</p>
+                    <div className="strip-actions">
+                      <button onClick={release} disabled={!!busy}>
+                        {busy === "release" ? "Giving it up…" : "Yes, give it up"}
+                      </button>
+                      <button className="ghost" onClick={() => setConfirmRelease(false)} disabled={!!busy}>
+                        Keep it
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </section>

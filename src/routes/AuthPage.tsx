@@ -17,7 +17,8 @@ import { VerifyCard } from "../components/VerifyCard";
 import { DEMO_HANDLES } from "../lib/attack";
 import { AUTH_MAX_AGE_SEC, buildAuthTemplate, createChallenge, verifyAuthEvent, type AuthResult } from "../lib/auth";
 import type { BchNetwork } from "../lib/network";
-import { hasSigner, signWithExtension } from "../lib/nostr";
+import { hasSigner } from "../lib/nostr";
+import { hasBrowserKey, signerFor, signerHolding } from "../lib/signer";
 import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
 
 const STATUS_WORDS: Record<Resolution["status"], string> = {
@@ -74,7 +75,10 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
     setAttempt(null);
     const used = challenge;
     try {
-      const event = await signWithExtension(buildAuthTemplate(used, window.location.origin));
+      // Sign with whichever key holds this name. If none does, still ask the extension, so signing with the
+      // wrong key shows up as a failed check rather than being silently refused here.
+      const signer = (await signerHolding(resolution.pubkey)) ?? signerFor("extension");
+      const event = await signer.sign(buildAuthTemplate(used, window.location.origin));
       const result = verifyAuthEvent(event, { challenge: used, origin: window.location.origin, pubkey: resolution.pubkey });
       setAttempt({ event, challenge: used, result });
     } catch (e) {
@@ -101,7 +105,8 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
         <h2>Sign in with your name</h2>
         <p className="muted">
           No password and no account. The site checks your name, gives you a one-time code, and you sign it with your
-          Nostr extension. If the signature comes from the key your name points to, you're in.
+          name's key (kept in this browser or in a Nostr extension). If the signature comes from the key your name points
+          to, you're in.
         </p>
         <form
           onSubmit={(e) => {
@@ -133,15 +138,18 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
           <p className="label">This site's one-time code</p>
           <code className="addr">{challenge}</code>
           <p className="muted small">
-            Your extension signs this code together with this site's address ({window.location.origin}), so a signature
+            Your key signs this code together with this site's address ({window.location.origin}), so a signature
             made here can't be used on another site. It expires after {AUTH_MAX_AGE_SEC / 60} minutes.
           </p>
-          {hasSigner() ? (
+          {hasSigner() || hasBrowserKey() ? (
             <button onClick={signIn} disabled={signing}>
-              {signing ? "Approve in your Nostr extension…" : `Sign in as ${resolution.handle?.full ?? handle}`}
+              {signing ? "Signing…" : `Sign in as ${resolution.handle?.full ?? handle}`}
             </button>
           ) : (
-            <p className="warn">No Nostr extension found. Install nos2x or Alby, then reload this page.</p>
+            <p className="warn">
+              No key found in this browser. Set up a free name on Get paid (it makes one), or install a Nostr extension like
+              nos2x or Alby, then reload this page.
+            </p>
           )}
           {error && <p className="err">{error}</p>}
         </section>
