@@ -75,6 +75,13 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
     <>
       <Journey label="Pay someone" steps={["Name", "Check", "Pay", "Receipt"]} current={stage} hint={hint} />
 
+      {params.ignored.length > 0 && (
+        <p className="warn alert" role="alert">
+          <strong>This link tried to change who gets paid.</strong> It set a recipient ({params.ignored.join(", ")}).
+          HandlePay ignores that: it only pays the address the name proves, shown below.
+        </p>
+      )}
+
       <VerifyCard
         handle={handle}
         network={network}
@@ -85,13 +92,6 @@ export function PayPage(props: { handle: string; search: URLSearchParams; wallet
           setAttempt((n) => n + 1);
         }}
       />
-
-      {params.ignored.length > 0 && (
-        <p className="warn">
-          This link tried to set the recipient ({params.ignored.join(", ")}). HandlePay ignores that: it only pays the
-          address the name proves.
-        </p>
-      )}
 
       {gate === "confirm_unverified" && !accepted && (
         <section className="card gate amber">

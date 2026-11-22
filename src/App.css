@@ -143,7 +143,8 @@ pre.addr { white-space: pre-wrap; margin: 8px 0 0; }
 .net button.on { background: var(--green); color: var(--on-green); }
 
 /* Mainnet reminder */
-.warn.mainnet {
+.warn.mainnet,
+.warn.alert {
   background: var(--amber-s); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-top: 14px;
 }
 
