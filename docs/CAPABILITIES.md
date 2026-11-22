@@ -23,7 +23,7 @@ call it Verified if they haven't.
 | The attack page runs on the real chain in a few seconds, with no money moved | 3 to 4 s per run, on mainnet and chipnet |
 | The page holds up at phone width with no sideways scrolling | 375 px wide, all seven pages |
 | The "why isn't my name file working" helper names the right problem | The probe run against real hosts: OK, name missing, unreachable, blocked/redirect |
-| 137 offline tests, lint and the build pass | `npm test`, `npm run lint`, `npm run build` |
+| 230 offline tests, lint and the build pass | `npm test`, `npm run lint`, `npm run build` |
 
 ## What it can't do, or only half does (say these first)
 
@@ -66,7 +66,7 @@ call it Verified if they haven't.
 
 1. Home: read the line, then tap **Pay Sani $0.25**. The name shows **Verified**.
 2. Say what the green badge means: two proofs that point at each other.
-3. Tap **Why it's safe**. Watch a fake Mallory get **Claimed**, not Verified. Nothing is paid.
+3. Tap **How it works** (`/security`). Watch a fake Mallory get **Claimed**, not Verified. Nothing is paid.
 4. Optional: connect a wallet and send the $0.25. Watch the Receipt follow the chain.
 
 Keep a screen recording of 2 to 4 in case a relay or chain server is slow on the day.
@@ -75,14 +75,14 @@ Keep a screen recording of 2 to 4 in case a relay or chain server is slow on the
 
 Preview first, live site after merging. Tick as you go.
 
-- [ ] Home shows two doors; theme toggle works in light and dark
+- [ ] Home shows two roles (Create my pay name, Pay someone); light only, by design
 - [ ] Pay door → example name → Verified → "Step 3 of 4"
 - [ ] `nobody@lycanforge.com.ng` → Not found, no pay form
 - [ ] `/pay/sani@lycanforge.com.ng?network=mainnet&to=bitcoincash:qfake` → warning shown
-- [ ] Why it's safe → both Mallory attempts amber, none green
-- [ ] Switch to Practice coins → `lycan@lycanforge.com.ng` is Verified
+- [ ] How it works → both Mallory attempts amber, none green
+- [ ] Switch to Chipnet → `lycan@lycanforge.com.ng` is Verified
 - [ ] Connect wallet on a phone; the QR or deep link works
 - [ ] Pay $0.25; Receipt moves through Submitted, Seen, Confirmed
 - [ ] "View transaction details" opens `/tx/…`
-- [ ] Footer "Sign in with your name" opens `/auth`
+- [ ] Footer "Your name as a login" opens `/auth`
 - [ ] Banner has slides link (once set), repo link, vote address, Copy and QR

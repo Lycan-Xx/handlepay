@@ -116,14 +116,14 @@ The first run with real money, on the live site `https://handlepay.lycanforge.co
 
 - **Name:** `sani@lycanforge.com.ng`, with its own throwaway Nostr key (`c7ca5aa5…`). A key holds one binding at a time and lycan's key is bound on chipnet for the chipnet demo, so Sani could not reuse it. The name was added to the LycanForge site's `nostr.json` (LycanForge commit `4c2e186`) and was live within about 30 s.
 - **Coins:** bought in the Bitcoin.com app and sent to Selene's receive 0 address (24,260 sats) and to Paytaca.
-- **Proof:** `8c7356c2…ddd8`, sent from Selene. Checked on a mainnet Fulcrum server: one input of 24,260 sats from the bound address only; output 0 is `OP_RETURN HPAY 01 <c7ca5aa5…>`; 24,025 sats of change back to the same address; fee 235 sats.
+- **Proof:** [`8c7356c26c2644a1c49fbf8552616078136a93aaefdb9c4cc450221b001cddd8`](https://blockchair.com/bitcoin-cash/transaction/8c7356c26c2644a1c49fbf8552616078136a93aaefdb9c4cc450221b001cddd8), sent from Selene. Checked on a mainnet Fulcrum server: one input of 24,260 sats from the bound address only; output 0 is `OP_RETURN HPAY 01 <c7ca5aa5…>`; 24,025 sats of change back to the same address; fee 235 sats.
 - **Binding:** published to 3/3 relays. After one confirmation, the pay page showed **Verified** on mainnet, paying to `bitcoincash:qqxeuaneldpe…xvl0`.
 - **Issue: the identity card kept disappearing.** Card 4 was shown only while WizardConnect said "connected". Selene's link drops whenever the phone locks, so the card unmounted and forgot the connected Nostr key. Fix `b5db8ec`: the card stays while the session is restoring, only the proof button waits for the wallet, and the Nostr key is kept for the tab (checked against the extension before a proof is sent).
 - **Issue: Paytaca said "Network Error" and nothing was sent.**
   - **Cause:** Paytaca's server `watchtower.cash` was answering 502 Bad Gateway. Paytaca's WizardConnect code (read on GitHub) signs, broadcasts through that server, and when the call throws it reports only the error and discards the signed transaction.
   - **Check:** Sani's address had no new transaction, and Paytaca's balance was untouched.
   - **Fix `7141c20`:** sign requests now say `broadcast: false`. The wallet only signs, and HandlePay sends the transaction through a public Fulcrum server on the page's network. This also removes the chipnet "missing-inputs" errors, which came from wallets broadcasting to mainnet.
-- **Payment:** `3e3b8d68…4b15`, $0.25 from Paytaca to Sani, made while `watchtower.cash` was still returning 502. Checked on the mainnet server:
+- **Payment:** [`3e3b8d68c9fcea50c7942cc3cde75251be2f09a9c0d53d83bce38fa21c7f4b15`](https://blockchair.com/bitcoin-cash/transaction/3e3b8d68c9fcea50c7942cc3cde75251be2f09a9c0d53d83bce38fa21c7f4b15), $0.25 from Paytaca to Sani, made while `watchtower.cash` was still returning 502. Checked on the mainnet server:
   - one input of 243,025 sats from Paytaca
   - 121,153 sats to Sani's verified address (about $0.25 at the time)
   - 121,653 sats of change back to Paytaca
