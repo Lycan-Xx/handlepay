@@ -76,6 +76,10 @@ export function SecurityPage({ network, search }: { network: BchNetwork; search:
 
   return (
     <>
+      <h2 className="page-title">How it works</h2>
+      <p className="page-lead">
+        Before you pay, HandlePay checks that a name really controls its address. Here it catches a copycat, live.
+      </p>
       <section className="card">
         <h2>Try the attack</h2>
         <p className="muted">

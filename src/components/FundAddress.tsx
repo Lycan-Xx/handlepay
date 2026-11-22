@@ -32,7 +32,7 @@ export function FundAddress({ address, network, minSats }: { address: string; ne
 
   return (
     <div className="fund">
-      <div className="fund-qr" role="img" aria-label={`QR code for ${address}`} dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="qr fund-qr" role="img" aria-label={`QR code for ${address}`} dangerouslySetInnerHTML={{ __html: svg }} />
       <div className="fund-body">
         <code className="addr">{address}</code>
         <p>

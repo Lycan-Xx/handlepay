@@ -35,7 +35,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
   font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased; overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased; overflow-wrap: break-word;
 }
 
 .shell { max-width: 600px; margin: 0 auto; padding: 16px 16px 40px; }
@@ -44,6 +44,7 @@ h2 { font-size: 1.15rem; margin: 0 0 8px; letter-spacing: -0.015em; font-weight:
 h3.section { font-size: 0.78rem; margin: 32px 0 0; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
 .page-title { font-size: 1.6rem; line-height: 1.15; letter-spacing: -0.03em; font-weight: 800; margin: 28px 0 6px; }
 .page-lead { color: var(--muted); margin: 0 0 4px; }
+.page-kicker { margin: 28px 0 -20px; }
 a { color: var(--accent-strong); text-underline-offset: 2px; }
 a:hover { color: var(--accent-hover); }
 .muted { color: var(--muted); font-size: 0.92rem; }
@@ -420,24 +421,16 @@ fieldset.plain { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 /* ---------- Attack page ---------- */
 .chain { display: grid; gap: 10px; margin: 16px 0; }
-.cnode { display: flex; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.cnode { display: flex; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
 .cnode .n {
   width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none;
-  font-weight: 650; font-size: 0.85rem; background: var(--green-s); color: var(--green);
+  font-weight: 700; font-size: 0.85rem; background: var(--accent-soft); color: var(--accent-strong);
 }
-.cnode.gate .n { background: var(--amber-s); color: var(--amber); }
+/* The link a copycat can't forge: the one large accent on the page. */
+.cnode.gate { border-color: color-mix(in srgb, var(--brand) 45%, var(--line)); }
+.cnode.gate .n { background: var(--accent-strong); color: #fff; }
 .cnode h4 { margin: 0 0 2px; font-size: 0.95rem; }
 .cnode p { margin: 0; color: var(--muted); font-size: 0.88rem; }
-.vs { display: grid; gap: 12px; margin: 14px 0; }
-@media (min-width: 560px) { .vs { grid-template-columns: 1fr 1fr; } }
-.vsc { border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); }
-.vsc.good { border-color: color-mix(in srgb, var(--green) 55%, var(--line)); }
-.vsc.bad { border-color: color-mix(in srgb, var(--amber) 55%, var(--line)); }
-.vsc .vh { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
-.vsc .vn { font-family: var(--mono); font-size: 0.85rem; word-break: break-all; margin: 2px 0 8px; }
-.vsc .vstatus { margin-top: 10px; font-weight: 650; font-size: 0.9rem; }
-.vsc.good .vstatus { color: var(--green); }
-.vsc.bad .vstatus { color: var(--amber); }
 .strike { text-decoration: line-through; color: var(--red); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -446,8 +439,7 @@ fieldset.plain { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 /* Funding the proof address: QR beside the address, stacked on a phone. */
 .fund { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin: 8px 0; }
-.fund-qr { width: 168px; max-width: 100%; background: #fff; padding: 4px; border-radius: 8px; flex: none; }
-.fund-qr svg { display: block; width: 100%; height: auto; }
+.fund-qr { width: 168px; }
 .fund-body { flex: 1 1 220px; min-width: 0; }
 
 /* ---------- Print: only the receipt, as a plain document ("Save as PDF") ---------- */

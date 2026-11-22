@@ -164,13 +164,19 @@ export function TxPage(props: { txid: string; search: URLSearchParams; network: 
             </span>
           </li>
           {name && (
-            <li className={nameClass(match, paidAddresses)}>
+            <li className={load.state === "ok" ? nameClass(match, paidAddresses) : ""}>
               <span className="pf-mark" aria-hidden>
-                {nameMark(match, paidAddresses)}
+                {load.state === "ok" ? nameMark(match, paidAddresses) : "○"}
               </span>
               <span>
-                <b>{nameHeadline(name, match, paidAddresses, view !== null)}</b>
-                <span className="muted small"> · {nameDetail(match, paidAddresses, view !== null, net.name)}</span>
+                <b>
+                  {load.state === "not_found" || load.state === "error"
+                    ? `Can't compare ${name} without the transaction`
+                    : nameHeadline(name, match, paidAddresses, view !== null)}
+                </b>
+                {load.state !== "not_found" && load.state !== "error" && (
+                  <span className="muted small"> · {nameDetail(match, paidAddresses, view !== null, net.name)}</span>
+                )}
               </span>
             </li>
           )}
