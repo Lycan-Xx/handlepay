@@ -13,6 +13,7 @@
  */
 import { useEffect, useState } from "react";
 import type { NostrEvent } from "nostr-tools/pure";
+import { Icon } from "../components/Icon";
 import { VerifyCard } from "../components/VerifyCard";
 import { DEMO_HANDLES } from "../lib/attack";
 import { AUTH_MAX_AGE_SEC, buildAuthTemplate, createChallenge, verifyAuthEvent, type AuthResult } from "../lib/auth";
@@ -101,9 +102,9 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
 
   return (
     <>
+      <p className="journey-kicker page-kicker">A demo of a site's login</p>
+      <h2 className="page-title">Your name as a login</h2>
       <section className="card">
-        <p className="journey-kicker">A demo of a site's login</p>
-        <h2>Your name as a login</h2>
         <p className="muted">
           No password and no account. The site checks your name, gives you a one-time code, and you sign it with your
           name's key (kept in this browser or in a Nostr extension). If the signature comes from the key your name points
@@ -144,7 +145,7 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
           </p>
           {hasSigner() || hasBrowserKey() ? (
             <button onClick={signIn} disabled={signing}>
-              {signing ? "Signing…" : `Sign in as ${resolution.handle?.full ?? handle}`}
+              <Icon name="login" /> {signing ? "Signing…" : `Sign in as ${resolution.handle?.full ?? handle}`}
             </button>
           ) : (
             <p className="warn">
@@ -161,7 +162,7 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
           {attempt.result.ok ? (
             <>
               <p className="badge">
-                <span aria-hidden>✓</span> Signed in as {resolution.handle?.full}
+                <Icon name="check_circle" /> Signed in as {resolution.handle?.full}
               </p>
               <p className="muted">
                 Name: {STATUS_WORDS[resolution.status]}
@@ -176,7 +177,7 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
                   "Signed with the key this name points to",
                 ].map((label) => (
                   <li key={label} className="ok">
-                    <span aria-hidden>✓</span> {label}
+                    <Icon name="check" /> {label}
                   </li>
                 ))}
               </ul>
@@ -194,7 +195,7 @@ export function AuthPage({ network, search }: { network: BchNetwork; search: URL
           ) : (
             <>
               <p className="badge">
-                <span aria-hidden>✗</span> Not signed in
+                <Icon name="close" /> Not signed in
               </p>
               <p className="muted">
                 {attempt.result.reason}.{" "}

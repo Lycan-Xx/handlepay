@@ -5,6 +5,7 @@ import {
   FEE_BUFFER,
   InsufficientFundsError,
   buildSignRequest,
+  feeOf,
   formatBch,
   selectCoins,
   txidOf,
@@ -135,5 +136,21 @@ describe("txidOf", () => {
     const genesis =
       "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73ffffffff0100f2052a01000000434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac00000000";
     expect(txidOf(genesis)).toBe("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+  });
+});
+
+describe("feeOf", () => {
+  it("is inputs minus outputs of the built transaction", () => {
+    const coin = testCoin(alice, 100_000n);
+    const request = buildSignRequest({ network: "chipnet", coins: [coin], to: bob, amount: 10_000n, changeAddress: aliceChange.address, provider });
+    const tx = decode(request.transaction.transaction);
+    expect(feeOf(request.transaction.transaction, [coin])).toBe(100_000n - 10_000n - tx.outputs[1].valueSatoshis);
+  });
+
+  it("gives up on bytes that aren't a transaction, or inputs that don't cover the outputs", () => {
+    const coin = testCoin(alice, 100_000n);
+    const request = buildSignRequest({ network: "chipnet", coins: [coin], to: bob, amount: 10_000n, changeAddress: aliceChange.address, provider });
+    expect(feeOf("00", [coin])).toBeUndefined();
+    expect(feeOf(request.transaction.transaction, [{ satoshis: 1n }])).toBeUndefined();
   });
 });

@@ -1,63 +1,65 @@
 /**
- * The front page: say what HandlePay is in one line, then show it working.
- * One primary button starts the tour at the attack demo, which needs no
- * wallet; the three-stop strip underneath shows where the tour goes. People
- * who already know what they came for use the nav.
+ * The front page: one promise, then the two roles side by side. Someone who
+ * wants to be paid creates a name; someone who wants to pay needs nothing but
+ * the name they were given. Signing in with a name (/auth) is a demo for other
+ * sites, so it lives in the footer, away from these two cards: next to "Pay"
+ * it made people think they had to log in to pay.
  */
-import { TourStrip } from "../components/Tour";
-import { DEMO_PAYEE } from "../config";
-import { useTone } from "../hooks/useTone";
+import { Icon } from "../components/Icon";
 import { navigate } from "../lib/router";
 
 export function HomePage() {
-  useTone("ok");
-
   const go = (href: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     navigate(href);
   };
-  // The tour's first stop: the attack demo, on the demo name's network.
-  const start = `/security?network=${DEMO_PAYEE.network}`;
 
   return (
     <>
       <section className="hero">
-        <h2 className="hero-title">Pay people, not addresses.</h2>
-        <p className="muted">
-          Send Bitcoin Cash to a name like <strong>{DEMO_PAYEE.handle}</strong>. Before any money moves, HandlePay proves
-          the name really owns the address, so a copied or swapped address gets caught.
+        <img className="hero-logo" src="/brand/logo-128.png" width="56" height="56" alt="HandlePay" />
+        <h2 className="hero-title">Your name. Your money. Your control.</h2>
+        <p className="hero-lead">
+          A simpler way to send and receive Bitcoin Cash using human-readable payment names.
         </p>
-        <div className="hero-cta">
-          <a className="button big-cta" href={start} onClick={go(start)}>
-            Watch it work
-          </a>
-          <span className="muted small">About a minute · no wallet · no money moves</span>
-        </div>
       </section>
 
-      <h3 className="section">The tour</h3>
-      <TourStrip />
+      <div className="roles">
+        <section className="card role">
+          <Icon name="alternate_email" className="role-icon" />
+          <h2>Get your payment name</h2>
+          <p className="muted">Create a name people can use to pay you.</p>
+          <a className="button block" href="/identity" onClick={go("/identity")}>
+            Create my pay name
+          </a>
+        </section>
+        <section className="card role">
+          <Icon name="send" className="role-icon" />
+          <h2>Pay someone</h2>
+          <p className="muted">Send BCH to someone's payment name. No account needed.</p>
+          <a className="button block" href="/pay" onClick={go("/pay")}>
+            Pay someone
+          </a>
+        </section>
+      </div>
 
-      <p className="muted small home-direct">
-        Know what you came for?{" "}
-        <a href="/pay" onClick={go("/pay")}>
-          Pay someone
-        </a>{" "}
-        or{" "}
-        <a href="/identity" onClick={go("/identity")}>
-          get paid by name
+      <p className="how-link">
+        <a href="/security" onClick={go("/security")}>
+          How it works <Icon name="arrow_forward" />
         </a>
-        .
       </p>
 
-      <p className="muted small home-foot">
-        Your name can also be your login.{" "}
-        <a href="/auth" onClick={go("/auth")}>
-          See it work
-        </a>
-        . No account anywhere: a name lives on a domain (yours, or a free one we host) and on Nostr, and proofs and
-        payments live on the Bitcoin Cash chain. Your coins never leave your wallet.
-      </p>
+      <ul className="trust" aria-label="Why it's safe">
+        <li>
+          <Icon name="no_accounts" /> No account needed to pay
+        </li>
+        <li>
+          <Icon name="verified" /> Checked against the blockchain
+        </li>
+        <li>
+          <Icon name="devices" /> Your keys stay on your device
+        </li>
+      </ul>
     </>
   );
 }

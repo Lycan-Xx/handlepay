@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchRoute, payPath } from "../src/lib/router";
+import { matchRoute, payPath, txPath } from "../src/lib/router";
 
 describe("matchRoute", () => {
   it("matches home with or without a trailing slash", () => {
@@ -52,5 +52,21 @@ describe("payPath", () => {
   it("round-trips through matchRoute", () => {
     const route = matchRoute(payPath("a/b@x.y").split("?")[0]);
     expect(route).toEqual({ name: "pay", handle: "a/b@x.y" });
+  });
+});
+
+describe("txPath", () => {
+  const txid = "ab".repeat(32);
+  it("always names the network, and the payee's name when given", () => {
+    expect(txPath(txid, "mainnet")).toBe(`/tx/${txid}?network=mainnet`);
+    expect(txPath(txid, "chipnet", "sani@lycanforge.com.ng")).toBe(`/tx/${txid}?network=chipnet&name=sani@lycanforge.com.ng`);
+  });
+
+  it("round-trips through the router and the query string", () => {
+    const href = txPath(txid, "mainnet", "a b&c@x.y");
+    const url = new URL(href, "https://example.com");
+    expect(matchRoute(url.pathname)).toEqual({ name: "tx", txid });
+    expect(url.searchParams.get("name")).toBe("a b&c@x.y");
+    expect(url.searchParams.get("network")).toBe("mainnet");
   });
 });

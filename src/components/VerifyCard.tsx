@@ -7,38 +7,40 @@
  * without colour. A Claimed or Changed address has no Copy button: an address
  * the name hasn't proven shouldn't be easy to take somewhere else.
  */
-import { useTone, type Tone } from "../hooks/useTone";
 import { explorerTx, type BchNetwork } from "../lib/network";
 import type { Resolution } from "../lib/resolve";
 import { navigate } from "../lib/router";
 import { CopyButton } from "./CopyButton";
+import { Icon, type IconName } from "./Icon";
+
+type Tone = "ok" | "amber" | "neutral" | "checking";
 
 const LOOK: Record<
   Resolution["status"],
-  { icon: string; title: string; tone: Tone; verdict: string; sub?: string }
+  { icon: IconName; title: string; tone: Tone; verdict: string; sub?: string }
 > = {
   verified: {
-    icon: "✓",
+    icon: "check_circle",
     title: "Verified",
     tone: "ok",
     verdict: "This name proved it controls the address below.",
     sub: "Two proofs point at each other. Safe to pay.",
   },
   claimed: {
-    icon: "!",
+    icon: "gpp_maybe",
     title: "Claimed, not proven",
     tone: "amber",
     verdict: "Someone named this address, but hasn't proved they own it.",
   },
   changed: {
-    icon: "🔒",
+    icon: "change_circle",
     title: "Changed since your last visit",
     tone: "amber",
     verdict: "This name now points to a different address than before.",
     sub: "Maybe they changed wallets, maybe someone took over the name. Ask them another way before you pay.",
   },
   not_found: {
-    icon: "–",
+    icon: "search_off",
     title: "Not found",
     tone: "neutral",
     verdict: "This name hasn't been set up.",
@@ -54,10 +56,8 @@ export function VerifyCard(props: {
   /** Set when the lookup itself failed (network down, etc.). */
   error?: string | null;
   onRetry?: () => void;
-  /** Set the page's background glow from this card. Pages that show several cards turn it off on all but one. */
-  wash?: boolean;
 }) {
-  const { handle, network, resolution, error, onRetry, wash = true } = props;
+  const { handle, network, resolution, error, onRetry } = props;
   const [local, domain] = splitHandle(resolution?.handle?.full ?? handle);
   // The resolver reports an unreachable domain as Not found with the reason in the first check's detail.
   // That is a failure to check, not proof the name doesn't exist, so it gets the "Couldn't check" card.
@@ -66,7 +66,6 @@ export function VerifyCard(props: {
     resolution?.status === "not_found" && first?.id === "nip05" && !first.ok && !!first.detail && first.detail !== "Name not listed";
   const failure = error ?? (unreachable ? (resolution?.reason ?? null) : null);
   const tone: Tone = resolution && !unreachable ? LOOK[resolution.status].tone : failure ? "neutral" : "checking";
-  useTone(wash ? tone : null);
 
   const nameBlock = (
     <>
@@ -87,7 +86,7 @@ export function VerifyCard(props: {
         {failure ? (
           <>
             <p className="badge">
-              <span aria-hidden>✗</span> Couldn't check this name
+              <Icon name="cloud_off" /> Couldn't check this name
             </p>
             <p className="verdict">We couldn't reach what we need to check it.</p>
             <p className="subverdict">{failure} We can't tell either way, so we won't call it Verified.</p>
@@ -105,10 +104,13 @@ export function VerifyCard(props: {
               <span className="spinner" aria-hidden /> Checking…
             </p>
             <ul className="checks pending">
-              <li>Name listed by {domain}</li>
-              <li>Signed by the name's Nostr key</li>
-              <li>BCH proof paid from the address</li>
-              <li>Proof confirmed on chain</li>
+              {[`Name listed by ${domain}`, "Signed by the name's Nostr key", "BCH proof paid from the address", "Proof confirmed on chain"].map(
+                (label) => (
+                  <li key={label}>
+                    <Icon name="radio_button_unchecked" /> {label}
+                  </li>
+                ),
+              )}
             </ul>
           </>
         )}
@@ -130,7 +132,7 @@ export function VerifyCard(props: {
     <section className={`card verify result tone-${look.tone}`} aria-live="polite">
       {nameBlock}
       <p className="badge">
-        <span aria-hidden>{look.icon}</span> {look.title}
+        <Icon name={look.icon} /> {look.title}
       </p>
       <p className="verdict">{look.verdict}</p>
       {sub && <p className="subverdict">{sub}</p>}
@@ -183,7 +185,7 @@ export function VerifyCard(props: {
           <ul className="checks">
             {resolution.checks.map((c) => (
               <li key={c.id} className={c.ok ? "ok" : "bad"}>
-                <span aria-hidden>{c.ok ? "✓" : "✗"}</span>
+                <Icon name={c.ok ? "check" : "close"} />
                 <span>
                   {c.label}
                   {c.detail && <span className="muted"> · {c.detail}</span>}

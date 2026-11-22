@@ -1,0 +1,17 @@
+# Cloudflare Pages response headers for static files.
+
+# The logo wallets show for HandlePay after pairing (useWallet's dappIcon), and the other brand
+# images. Wallets display it with a plain <img>, which needs no CORS, but any wallet that fetches
+# it from script instead can, and it can be cached for a day.
+/icon-192.png
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=86400
+
+/brand/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=86400
+
+# Link preview image, fetched by social crawlers.
+/og-image.jpg
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=86400

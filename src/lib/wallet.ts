@@ -1,4 +1,4 @@
-import { binToHex, encodeTransaction, hashTransaction, hexToBin, publicKeyToP2pkhCashAddress } from "@bitauth/libauth";
+import { binToHex, decodeTransaction, encodeTransaction, hashTransaction, hexToBin, publicKeyToP2pkhCashAddress } from "@bitauth/libauth";
 import { sourceOutputToRelay } from "@wizardconnect/core/hdwalletv1-serialize";
 import type { DappConnectionManager } from "@wizardconnect/dapp";
 import {
@@ -171,6 +171,10 @@ export interface SendResult {
   /** The hex the wallet handed back. */
   signedTransaction: string;
   broadcast: BroadcastResult;
+  /** Inputs minus outputs, when the transaction on the network is the one HandlePay built. */
+  fee?: bigint;
+  /** The payer's addresses that were spent from (for the printed receipt only); empty when unknown. */
+  inputAddresses: string[];
 }
 
 /**
@@ -238,7 +242,26 @@ export async function sendBch(opts: {
         "Check your balance before trying again.",
     );
   }
-  return { txid: broadcast.txid, signedTransaction: response.signedTransaction, broadcast };
+  // The fee and the payer's addresses are known for the transaction HandlePay built. If the wallet put its own
+  // version on the network instead ("replaced"), its inputs may differ, so neither is claimed for it.
+  const ours = broadcast.txid === signedTxid;
+  const fee = ours ? feeOf(response.signedTransaction, picked) : undefined;
+  return {
+    txid: broadcast.txid,
+    signedTransaction: response.signedTransaction,
+    broadcast,
+    ...(fee !== undefined ? { fee } : {}),
+    inputAddresses: ours ? [...new Set(picked.map((c) => c.owner.address))] : [],
+  };
+}
+
+/** Inputs minus outputs of a signed transaction whose inputs are `spent`. Undefined if it can't be decoded. */
+export function feeOf(rawHex: string, spent: { satoshis: bigint }[]): bigint | undefined {
+  const tx = decodeTransaction(hexToBin(rawHex));
+  if (typeof tx === "string") return undefined;
+  const out = tx.outputs.reduce((s, o) => s + o.valueSatoshis, 0n);
+  const fee = spent.reduce((s, c) => s + c.satoshis, 0n) - out;
+  return fee >= 0n ? fee : undefined;
 }
 
 /** Transaction id of a raw transaction (double SHA-256, byte-reversed hex). */

@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="https://handlepay.lycanforge.com.ng">
+    <img src="public/assets/handlepay-banner.png" width="100%"
+      alt="HandlePay: Your name. Your money. Your control. A simpler way to send and receive Bitcoin Cash using human-readable payment names." />
+  </a>
+</p>
+
 # HandlePay
 
 **Pay people, not addresses.** Send Bitcoin Cash to a name like `sani@lycanforge.com.ng`
@@ -78,7 +85,12 @@ node scripts/smoke-names.mjs https://your-site.example   # claims and releases a
 ## Use the resolver in your own app
 
 [`packages/resolve`](packages/resolve) is the same verification code the app uses,
-packaged as `@handlepay/resolve`:
+published on npm as [`@handlepay/resolve`](https://www.npmjs.com/package/@handlepay/resolve).
+Any BCH wallet or shop can run the same three-link check before paying a name:
+
+```sh
+npm install @handlepay/resolve
+```
 
 ```ts
 import { resolve } from "@handlepay/resolve";

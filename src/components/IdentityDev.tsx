@@ -11,6 +11,7 @@ import { paymentErrorMessage } from "../lib/paylink";
 import { DEFAULT_RELAYS, hasSigner, publishEvent, signWithExtension, signerPubkey, type PublishResult } from "../lib/nostr";
 import { liveDeps, resolveHandle, type Resolution } from "../lib/resolve";
 import { sendBch, type WalletCoin } from "../lib/wallet";
+import { Icon } from "./Icon";
 
 const PROOF_KEY = "handlepay-dev-proof";
 /** The Nostr key this tab connected, so a wallet reconnect doesn't make you connect it again. */
@@ -209,7 +210,7 @@ export function IdentityDev(props: {
           <ul>
             {resolution.checks.map((c) => (
               <li key={c.id}>
-                {c.ok ? "✓" : "✗"} {c.label}
+                <Icon name={c.ok ? "check" : "close"} /> {c.label}
                 {c.detail && ` (${c.detail})`}
               </li>
             ))}

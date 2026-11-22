@@ -81,6 +81,13 @@ export interface Receipt {
   explorerUrl: string;
   /** How the transaction reached the network (from ensureBroadcast). */
   broadcast?: { status: "seen" | "sent" | "replaced" | "unverified"; detail?: string };
+  /** Network fee in satoshis, computed when the transaction was built. */
+  fee?: bigint;
+  /**
+   * The payer's own addresses spent from. Shown only on the printed receipt
+   * (the payer's copy), never on /tx, which anyone can open.
+   */
+  payerAddresses?: string[];
 }
 
 /** Plain-text receipt for the Copy button. */
@@ -91,6 +98,7 @@ export function receiptText(r: Receipt, bch: (sats: bigint) => string): string {
     ...(r.memo ? [`Memo: ${r.memo}`] : []),
     `To address: ${r.address}`,
     `Network: ${r.network}`,
+    ...(r.fee !== undefined ? [`Network fee: ${r.fee} sats`] : []),
     `Transaction: ${r.txid}`,
     `Explorer: ${r.explorerUrl}`,
     `Time: ${new Date(r.at).toISOString()}`,
