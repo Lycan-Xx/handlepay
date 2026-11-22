@@ -18,6 +18,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { decodeTransaction, hexToBin } from "@bitauth/libauth";
 import { CopyButton } from "../components/CopyButton";
+import { FundAddress } from "../components/FundAddress";
 import { Journey } from "../components/Journey";
 import { VerifyCard } from "../components/VerifyCard";
 import type { Wallet } from "../hooks/useWallet";
@@ -776,7 +777,11 @@ export function IdentityPage({ wallet, network }: { wallet: Wallet; network: Bch
             ) : (
               <>
                 <p className="label">You'll be paid at</p>
-                <code className="addr">{bindAddress}</code>
+                {!proofHere && atAddress < PROOF_MIN_SATS ? (
+                  <FundAddress address={bindAddress} network={network} minSats={PROOF_MIN_SATS} />
+                ) : (
+                  <code className="addr">{bindAddress}</code>
+                )}
                 {!proofHere && (
                   <p className={atAddress >= PROOF_MIN_SATS ? "muted" : "warn"}>
                     {formatBch(atAddress)} {network === "chipnet" ? "tBCH" : "BCH"} at this address.{" "}

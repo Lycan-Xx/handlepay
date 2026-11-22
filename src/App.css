@@ -379,3 +379,9 @@ a.door:hover { border-color: var(--green); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Funding the proof address: QR beside the address, stacked on a phone. */
+.fund { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin: 8px 0; }
+.fund-qr { width: 168px; max-width: 100%; background: #fff; padding: 4px; border-radius: 8px; flex: none; }
+.fund-qr svg { display: block; width: 100%; height: auto; }
+.fund-body { flex: 1 1 220px; min-width: 0; }
