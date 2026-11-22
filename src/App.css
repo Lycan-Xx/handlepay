@@ -296,6 +296,14 @@ label.memo input { font-size: 0.95rem; }
 .banner a:focus-visible, .banner button:focus-visible { outline-color: #fff; }
 .banner .vote { display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; min-width: 0; }
 .banner code { word-break: break-all; font-size: 0.75rem; }
+.banner .vote-code { color: var(--brand); font-weight: 800; }
+.desktop-only { display: none; }
+@media (min-width: 768px) {
+  .desktop-only { display: inline; }
+  .desktop-hide { display: none; }
+  /* Room for the whole vote address on one line: the strip spans the window, centred. */
+  .banner-in { max-width: none; justify-content: center; }
+}
 .vote-qr { flex-basis: 100%; margin: 4px 0 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .vote-qr .qr { width: 180px; }
 

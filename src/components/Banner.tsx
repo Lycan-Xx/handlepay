@@ -37,9 +37,16 @@ export function Banner() {
         </a>
         {SITE.voteAddress && (
           <span className="vote">
-            <Icon name="how_to_vote" /> Vote with {SITE.voteCode}:{" "}
+            <Icon name="how_to_vote" />
+            <span>
+              Vote with <strong className="vote-code">{SITE.voteCode}</strong>:
+            </span>
             <code title={SITE.voteAddress}>
-              {SITE.voteAddress.replace(/^bitcoincash:/, "").slice(0, 8)}…{SITE.voteAddress.slice(-6)}
+              {/* The whole address where there's room; a phone gets the short form (Copy and QR carry the full one). */}
+              <span className="desktop-only">{SITE.voteAddress}</span>
+              <span className="desktop-hide">
+                {SITE.voteAddress.replace(/^bitcoincash:/, "").slice(0, 8)}…{SITE.voteAddress.slice(-6)}
+              </span>
             </code>
             <button className="link" onClick={copy}>
               <Icon name={copied ? "check" : "content_copy"} /> {copied ? "Copied" : "Copy"}
