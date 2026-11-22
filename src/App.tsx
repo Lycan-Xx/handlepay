@@ -44,6 +44,7 @@ export default function App() {
         <header className="top">
           <h1>
             <a href="/" className="brand" onClick={link("/")}>
+              <img src="/brand/logo-64.png" width="28" height="28" alt="" />
               HandlePay
             </a>
           </h1>

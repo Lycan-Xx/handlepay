@@ -17,7 +17,8 @@ import { deriveAddresses, getCoins, type WalletAddress, type WalletCoin } from "
 export type Wallet = ReturnType<typeof useWallet>;
 
 export function useWallet(network: BchNetwork) {
-  const wc = useWizardConnect({ dappName: "HandlePay" });
+  // The wallet shows this name and icon when asked to pair, so it can tell the person which site is asking.
+  const wc = useWizardConnect({ dappName: "HandlePay", dappIcon: `${window.location.origin}/brand/logo-128.png` });
   const [showQR, setShowQR] = useState(false);
   const [coins, setCoins] = useState<WalletCoin[]>([]);
   const [loading, setLoading] = useState(false);

@@ -17,6 +17,7 @@ export function HomePage() {
   return (
     <>
       <section className="hero">
+        <img className="hero-logo" src="/brand/logo-128.png" width="56" height="56" alt="HandlePay" />
         <h2 className="hero-title">Your name. Your money. Your control.</h2>
         <p className="hero-lead">
           A simpler way to send and receive Bitcoin Cash using human-readable payment names.

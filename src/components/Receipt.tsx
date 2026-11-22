@@ -108,7 +108,9 @@ export function Receipt({ receipt, network }: { receipt: ReceiptData; network: B
 
   return (
     <section className="card receipt" aria-live="polite">
-      <p className="print-only receipt-doc-title">Payment receipt</p>
+      <p className="print-only receipt-doc-title">
+        <img src="/brand/logo-64.png" width="20" height="20" alt="" /> HandlePay · Payment receipt
+      </p>
       <div className="receipt-head">
         <div className={`tick ${confirmed ? "" : "pending"}`}>
           <Icon name={confirmed ? "check" : "hourglass_top"} />
